@@ -1,0 +1,17 @@
+[package]
+name = "ioutrack"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "ioutrack"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.16.3", features = ["extension-module"] }
+ndarray = "0.15.4"
+ndarray-linalg = {version = "0.14.1", features = ["openblas-static"]}
+numpy = "0.16.2"
+num = "0.4.0"
+anyhow = "1.0.57"
