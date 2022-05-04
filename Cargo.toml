@@ -15,3 +15,4 @@ ndarray-linalg = {version = "0.14.1", features = ["openblas-static"]}
 numpy = "0.16.2"
 num = "0.4.0"
 anyhow = "1.0.57"
+itertools = "0.10.3"

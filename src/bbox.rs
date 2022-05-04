@@ -18,7 +18,9 @@ pub fn intersection_areas<T: LinalgScalar + Float>(boxes1: ArrayView2<T>, boxes2
     let intersection_width = (min_xmax - max_xmin).mapv_into(|x| x.max(T::zero()));
     let intersection_height = (min_ymax - max_ymin).mapv_into(|x| x.max(T::zero()));
 
-    Ok(intersection_width * intersection_height)
+    // We know this is 2 dim (len(boxes_1), len(boxes_2))
+    // broadcasting is implemented manually in maximum/minimum, so this is not automatic
+    Ok((intersection_width * intersection_height).into_dimensionality().unwrap())
 }
 
 pub fn ious<T: LinalgScalar + Float>(boxes1: ArrayView2<T>, boxes2: ArrayView2<T>) -> Result<Array2<T>>{
@@ -26,5 +28,5 @@ pub fn ious<T: LinalgScalar + Float>(boxes1: ArrayView2<T>, boxes2: ArrayView2<T
     let areas1 = (&boxes1.slice(s![..,2]) - &boxes1.slice(s![..,0])) * (&boxes1.slice(s![..,3]) - &boxes1.slice(s![..,1]));
     let areas2 = (&boxes2.slice(s![..,2]) - &boxes2.slice(s![..,0])) * (&boxes2.slice(s![..,3]) - &boxes2.slice(s![..,1]));
 
-    Ok(&intersections / (areas1 + areas2 - &intersections))
+    Ok(&intersections / (areas1.insert_axis(Axis(1)) + areas2.insert_axis(Axis(0)) - &intersections))
 }

@@ -74,7 +74,7 @@ fn ioutrack(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(array2_sum, m)?)?;
     m.add_function(wrap_pyfunction!(array2_inv, m)?)?;
     m.add_function(wrap_pyfunction!(test_kalman, m)?)?;
-
+    m.add_function(wrap_pyfunction!(calc_ious, m)?)?;
 
     Ok(())
 }
