@@ -6,11 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
 name = "ioutrack"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "lib"]
 
 [dependencies]
 pyo3 = { version = "0.16.3", features = ["extension-module"] }
-ndarray = "0.15.4"
+ndarray = {version = "0.15.4", features = ["approx-0_5"]}
+approx = "0.5.1"
 ndarray-linalg = {version = "0.14.1", features = ["openblas-static"]}
 numpy = "0.16.2"
 num = "0.4.0"

@@ -1,6 +1,6 @@
 
 use pyo3::prelude::*;
-use pyo3::exceptions::{PyArithmeticError, PyValueError};
+use pyo3::exceptions::PyArithmeticError;
 use ndarray::prelude::array;
 use numpy::{IntoPyArray, PyArray1, PyArray2, PyReadonlyArray2};
 use ndarray_linalg::solve::{Inverse};
@@ -8,7 +8,7 @@ use ndarray_linalg::solve::{Inverse};
 mod kalman;
 use kalman::{KalmanFilter, KalmanFilterParams};
 
-mod bbox;
+pub mod bbox;
 use bbox::ious;
 
 mod ndarray_utils;
@@ -36,10 +36,7 @@ fn array2_inv<'py>(_py: Python<'py>, a: PyReadonlyArray2<f64>) -> PyResult<&'py 
 
 #[pyfunction]
 fn calc_ious<'py>(_py: Python<'py>, boxes1: PyReadonlyArray2<f64>, boxes2: PyReadonlyArray2<f64>) -> PyResult<&'py PyArray2<f64>> {
-    match ious(boxes1.as_array(), boxes2.as_array()) {
-        Ok(res) => Ok(res.into_pyarray(_py)),
-        Err(err) => Err(PyValueError::new_err(err.to_string())),
-    }
+    Ok(ious(boxes1.as_array(), boxes2.as_array()).into_pyarray(_py))
 }
 
 #[pyfunction]
