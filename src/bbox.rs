@@ -45,13 +45,13 @@ pub fn intersection_areas<T: BboxNum>(boxes1: ArrayView2<T>, boxes2: ArrayView2<
 /// 
 /// ```
 /// use ndarray::prelude::array;
-/// use approx::abs_diff_eq;
-/// let intersections = ioutrack::bbox::ious(
+/// use approx::assert_abs_diff_eq;
+/// let iou_result = ioutrack::bbox::ious(
 ///     (array![[0., 0., 10., 12.], [5., 7., 13., 11.]]).view(),
 ///     (array![[5., 7., 13., 11.], [9., 11., 13., 14.]]).view()
 /// );
-/// abs_diff_eq!(
-///     intersections,
+/// assert_abs_diff_eq!(
+///     iou_result,
 ///     array![[0.15151, 0.00763],
 ///            [1.,      0.]],
 ///     epsilon = 0.0001
@@ -70,4 +70,64 @@ pub fn ious<T: BboxNum>(boxes1: ArrayView2<T>, boxes2: ArrayView2<T>) -> Array2<
         .for_each(|o, &intersection, &area1, &area2|
             {*o = intersection.to_f64().unwrap() / (area1 + area2 - intersection).to_f64().unwrap()});
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use approx::assert_abs_diff_eq;
+
+    #[test]
+    fn test_intersection_areas() {
+        let intersections = intersection_areas(
+             (array![[0., 0., 10., 12.], [9., 11., 13., 14.]]).view(),
+             (array![[5., 7., 13., 11.]]).view()
+         );
+         assert_eq!(intersections, array![[20.], [0.]]);
+    }
+
+    #[test]
+    fn test_intersection_areas_int() {
+        let intersections = intersection_areas(
+             (array![[0, 0, 10, 12], [9, 11, 13, 14]]).view(),
+             (array![[5, 7, 13, 11]]).view()
+         );
+         assert_eq!(intersections, array![[20], [0]]);
+    }
+
+    #[test]
+    fn test_ious() {
+        let iou_result = ious(
+            (array![[0., 0., 10., 12.]]).view(),
+            (array![[5., 7., 13., 11.], [9., 11., 13., 14.]]).view()
+        );
+        assert_abs_diff_eq!(
+            iou_result,
+            array![[0.15151, 0.00763]],
+            epsilon = 0.0001
+        );
+
+        let iou_result = ious(
+            (array![[0., 0., 10., 12.], [5., 7., 13., 11.]]).view(),
+            (array![[5., 7., 13., 11.]]).view()
+        );
+        assert_abs_diff_eq!(
+            iou_result,
+            array![[0.15151], [1.]],
+            epsilon = 0.0001
+        );
+    }
+
+    #[test]
+    fn test_ious_int() {
+        let iou_result = ious(
+            (array![[0, 0, 10, 12]]).view(),
+            (array![[5, 7, 13, 11], [9, 11, 13, 14]]).view()
+        );
+        assert_abs_diff_eq!(
+            iou_result,
+            array![[0.15151, 0.00763]],
+            epsilon = 0.0001
+        );
+    }
 }
