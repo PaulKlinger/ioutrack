@@ -5,6 +5,8 @@ use ndarray::prelude::array;
 use numpy::{IntoPyArray, PyArray1, PyArray2, PyReadonlyArray2};
 use ndarray_linalg::solve::{Inverse};
 
+mod num_utils;
+
 mod kalman;
 use kalman::{KalmanFilter, KalmanFilterParams};
 
