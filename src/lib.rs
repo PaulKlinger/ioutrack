@@ -56,6 +56,7 @@ fn test_kalman(_py: Python) -> PyResult<&PyArray1<f64>> {
         x: array![0., 0.],
     });
 
+    kf.predict();
     if let Err(err) = kf.update(array![2.]) {
         return Err(PyArithmeticError::new_err(err.to_string()));
     }
