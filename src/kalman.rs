@@ -1,10 +1,9 @@
+use anyhow::{Context, Result};
 use ndarray::prelude::*;
 use ndarray::LinalgScalar;
 use ndarray_linalg::solve::Inverse;
 use ndarray_linalg::types::Lapack;
 use num::Float;
-use anyhow::{Result, Context};
-
 
 pub struct KalmanFilterParams<T: LinalgScalar + Lapack + Float> {
     pub dim_x: usize,
@@ -31,15 +30,15 @@ pub struct KalmanFilter<T: LinalgScalar + Lapack + Float> {
     _i: Array2<T>,
 }
 
-
 impl<T: LinalgScalar + Lapack + Float> KalmanFilter<T> {
     pub fn new(params: KalmanFilterParams<T>) -> Self {
-
         KalmanFilter {
             x: params.x.insert_axis(Axis(1)),
-            p: params.p, q: params.q,
+            p: params.p,
+            q: params.q,
             r: params.r,
-            f: params.f, h: params.h,
+            f: params.f,
+            h: params.h,
             y: Array2::zeros((params.dim_z, 1)),
             k: Array2::zeros((params.dim_x, params.dim_z)),
             s: Array2::zeros((params.dim_z, params.dim_z)),
@@ -48,12 +47,12 @@ impl<T: LinalgScalar + Lapack + Float> KalmanFilter<T> {
         }
     }
 
-    pub fn predict(&mut self) -> Array1<T>{
+    pub fn predict(&mut self) -> Array1<T> {
         self.x = self.f.dot(&self.x);
         self.p = self.f.dot(&self.p).dot(&self.f.t()) + &self.q;
 
         // We clone the x, as the caller might do anything with it
-        self.x.slice(s![..,0]).to_owned()
+        self.x.slice(s![.., 0]).to_owned()
     }
 
     pub fn update(&mut self, z: Array1<T>) -> Result<()> {

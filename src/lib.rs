@@ -1,9 +1,8 @@
-
-use pyo3::prelude::*;
-use pyo3::exceptions::PyArithmeticError;
 use ndarray::prelude::array;
+use ndarray_linalg::solve::Inverse;
 use numpy::{IntoPyArray, PyArray1, PyArray2, PyReadonlyArray2};
-use ndarray_linalg::solve::{Inverse};
+use pyo3::exceptions::PyArithmeticError;
+use pyo3::prelude::*;
 
 mod num_utils;
 
@@ -14,7 +13,6 @@ pub mod bbox;
 use bbox::ious;
 
 mod ndarray_utils;
-
 
 #[pyfunction]
 fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
@@ -37,30 +35,34 @@ fn array2_inv<'py>(_py: Python<'py>, a: PyReadonlyArray2<f64>) -> PyResult<&'py 
 }
 
 #[pyfunction]
-fn calc_ious<'py>(_py: Python<'py>, boxes1: PyReadonlyArray2<f64>, boxes2: PyReadonlyArray2<f64>) -> PyResult<&'py PyArray2<f64>> {
+fn calc_ious<'py>(
+    _py: Python<'py>,
+    boxes1: PyReadonlyArray2<f64>,
+    boxes2: PyReadonlyArray2<f64>,
+) -> PyResult<&'py PyArray2<f64>> {
     Ok(ious(boxes1.as_array(), boxes2.as_array()).into_pyarray(_py))
 }
 
 #[pyfunction]
-fn test_kalman<'py>(_py: Python<'py>) -> PyResult<&'py PyArray1<f64>> {
+fn test_kalman(_py: Python) -> PyResult<&PyArray1<f64>> {
     let mut kf = KalmanFilter::<f64>::new(KalmanFilterParams {
-        dim_x: 2, dim_z: 1,
+        dim_x: 2,
+        dim_z: 1,
         f: array![[1., 1.], [0., 1.]],
         h: array![[1., 0.]],
         r: array![[0.5]],
         p: array![[0.1, 0.], [0., 10.]],
         q: array![[0.1, 0.], [0., 0.2]],
-        x: array![0., 0.]
+        x: array![0., 0.],
     });
 
-    match kf.update(array![2.]) {
-        Err(err) => return Err(PyArithmeticError::new_err(err.to_string())),
-        _ => {}
+    if let Err(err) = kf.update(array![2.]) {
+        return Err(PyArithmeticError::new_err(err.to_string()));
     }
+
     kf.predict();
-    match kf.update(array![3.5]) {
-        Err(err) => return Err(PyArithmeticError::new_err(err.to_string())),
-        _ => {}
+    if let Err(err) = kf.update(array![3.5]) {
+        return Err(PyArithmeticError::new_err(err.to_string()));
     }
 
     Ok(kf.predict().into_pyarray(_py))
