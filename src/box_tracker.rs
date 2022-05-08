@@ -40,11 +40,7 @@ impl KalmanBoxTracker {
             kf: KalmanFilter::new(KalmanFilterParams {
                 dim_x: 7, // center_x, center_y, area, aspect_ratio, vel_x, vel_y, vel_area
                 dim_z: 4, // center_x, center_y, area, aspect_ratio
-                x: ndarray::concatenate(
-                    Axis(0),
-                    &[p.bbox.to_z().view(), array![0., 0., 0.].view()],
-                )
-                .unwrap(),
+                x: ndarray::concatenate![Axis(0), p.bbox.to_z(), array![0., 0., 0.]],
                 p: Array2::from_diag(&array![10., 10., 1000., 0.5, 1000., 1000., 1000.]),
                 f: array![
                     [1., 0., 0., 0., 1., 0., 0.], // center_x' = center_x + vel_x
