@@ -4,6 +4,28 @@ use ndarray::Zip;
 
 use crate::ndarray_utils::*;
 
+pub struct Bbox<T: BboxNum> {
+    xmin: T,
+    ymin: T,
+    xmax: T,
+    ymax: T,
+}
+
+impl<T: BboxNum> Bbox<T> {
+    /// Convert BBox to center_x, center_y, area, aspect_ratio representation
+    /// (measurement for Kalman filter)
+    pub fn to_z(self) -> Array1<f32> {
+        let width = (self.xmax - self.xmin).to_f32().unwrap();
+        let height = (self.ymax - self.ymin).to_f32().unwrap();
+        array![
+            (self.xmax + self.xmin).to_f32().unwrap() / 2.,
+            (self.ymax + self.ymin).to_f32().unwrap() / 2.,
+            width * height,
+            width / height
+        ]
+    }
+}
+
 /// Calculate areas of intersections of all combinations of a box from boxes1 and one from boxes2
 /// Both are in format [[xmin1, ymin1, xmax1, ymax1], [xmin2,...],...]
 ///
@@ -79,6 +101,18 @@ pub fn ious<T: BboxNum>(boxes1: ArrayView2<T>, boxes2: ArrayView2<T>) -> Array2<
 mod tests {
     use super::*;
     use approx::assert_abs_diff_eq;
+
+    #[test]
+    fn test_bbox_to_z() {
+        let bbox = Bbox::<u32> {
+            xmin: 0,
+            ymin: 10,
+            xmax: 20,
+            ymax: 20,
+        };
+
+        assert_abs_diff_eq!(bbox.to_z(), array![10., 15., 200., 2.], epsilon = 0.0001);
+    }
 
     #[test]
     fn test_intersection_areas() {
