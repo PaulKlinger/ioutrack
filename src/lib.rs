@@ -9,6 +9,8 @@ mod num_utils;
 mod kalman;
 use kalman::{KalmanFilter, KalmanFilterParams};
 
+pub mod box_tracker;
+
 pub mod bbox;
 use bbox::ious;
 
