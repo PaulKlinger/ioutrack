@@ -12,23 +12,29 @@ pub struct KalmanFilterParams<T: LinalgScalar + Lapack + Float> {
     /// dimension of measurement vectors
     pub dim_z: usize,
     /// initial mean of state estimate
+    /// shape = (dim_x)
     pub x: Array1<T>,
     /// initial state covariance matrix
+    /// shape = (dim_x)
     pub p: Array2<T>,
     /// state transition matrix
     /// This is multiplied with the current state to
     /// get the prediction of the new state
+    /// shape = (dim_x, dim_x)
     pub f: Array2<T>,
     /// measurement function
     /// multiplying this with the state gives the
     /// expected measurement in that state
+    /// shape = (dim_z, dim_x)
     pub h: Array2<T>,
     /// measurement noise covariance matrix
     /// i.e. how much uncertainty is in the measurements
+    /// shape = (dim_z, dim_z)
     pub r: Array2<T>,
     /// process noise
     /// i.e. how much uncertainty is in the transition from
     /// one state to the next
+    /// shape = (dim_x, dim_x)
     pub q: Array2<T>,
 }
 
