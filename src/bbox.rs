@@ -5,10 +5,10 @@ use ndarray::Zip;
 use crate::ndarray_utils::*;
 
 pub struct Bbox<T: BboxNum> {
-    xmin: T,
-    ymin: T,
-    xmax: T,
-    ymax: T,
+    pub xmin: T,
+    pub ymin: T,
+    pub xmax: T,
+    pub ymax: T,
 }
 
 impl<T: BboxNum> Bbox<T> {
@@ -23,6 +23,20 @@ impl<T: BboxNum> Bbox<T> {
             width * height,
             width / height
         ]
+    }
+}
+impl Bbox<f32> {
+    /// Convert center_x, center_y, area, aspect_ratio representation to Bbox
+    pub fn from_z(z: &[f32]) -> Self {
+        // area = width * height = width**2 / aspect
+        let width = (z[2] * z[3]).sqrt();
+        let height = width * z[3];
+        Self {
+            xmin: z[0] - width / 2.,
+            xmax: z[0] + width / 2.,
+            ymin: z[1] - height / 2.,
+            ymax: z[1] + height / 2.,
+        }
     }
 }
 
