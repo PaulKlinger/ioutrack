@@ -8,13 +8,13 @@ pub struct KalmanBoxTracker {
     pub id: u32,
     /// Kalman filter tracking bbox state
     kf: KalmanFilter<f32>,
-    /// number of steps tracker has been updated/predicted for
+    /// number of steps tracker has been run for (each predict() is one step)
     pub age: u32,
     /// number of steps with matching detection box
     pub hits: u32,
     /// number of consecutive steps with matched box
     pub hit_streak: u32,
-    /// number of steps predicted without receiving box
+    /// number of consecutive steps predicted without receiving box
     pub steps_since_update: u32,
 }
 
@@ -25,7 +25,7 @@ pub struct KalmanBoxTrackerParams {
     /// default = 1.
     pub center_var: Option<f32>,
     /// Variance of box area measurement
-    /// default = 1000.
+    /// default = 10.
     pub area_var: Option<f32>,
     /// Variance of box aspect ratio measurement
     /// default = 0.01
@@ -86,9 +86,13 @@ impl KalmanBoxTracker {
 
     /// Update tracker with detected box
     pub fn update(&mut self, bbox: Bbox<f32>) -> Result<()> {
+        // don't increase hits/hit_streak if we get
+        // several updates in the same step
+        if self.steps_since_update > 0 {
+            self.hits += 1;
+            self.hit_streak += 1;
+        }
         self.steps_since_update = 0;
-        self.hits += 1;
-        self.hit_streak += 1;
         self.kf.update(bbox.to_z())?;
         Ok(())
     }
