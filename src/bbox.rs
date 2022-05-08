@@ -1,9 +1,11 @@
 use crate::num_utils::{partial_max, BboxNum};
+use approx::AbsDiffEq;
 use ndarray::prelude::*;
 use ndarray::Zip;
 
 use crate::ndarray_utils::*;
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct Bbox<T: BboxNum> {
     pub xmin: T,
     pub ymin: T,
@@ -12,7 +14,7 @@ pub struct Bbox<T: BboxNum> {
 }
 
 impl<T: BboxNum> Bbox<T> {
-    /// Convert BBox to center_x, center_y, area, aspect_ratio representation
+    /// Convert Bbox to center_x, center_y, area, aspect_ratio representation
     /// (measurement for Kalman filter)
     pub fn to_z(self) -> Array1<f32> {
         let width = (self.xmax - self.xmin).to_f32().unwrap();
@@ -30,13 +32,31 @@ impl Bbox<f32> {
     pub fn from_z(z: &[f32]) -> Self {
         // area = width * height = width**2 / aspect
         let width = (z[2] * z[3]).sqrt();
-        let height = width * z[3];
+        let height = width / z[3];
         Self {
             xmin: z[0] - width / 2.,
             xmax: z[0] + width / 2.,
             ymin: z[1] - height / 2.,
             ymax: z[1] + height / 2.,
         }
+    }
+}
+
+impl<T: AbsDiffEq + BboxNum> AbsDiffEq for Bbox<T>
+where
+    T::Epsilon: Copy,
+{
+    type Epsilon = T::Epsilon;
+
+    fn default_epsilon() -> T::Epsilon {
+        T::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: T::Epsilon) -> bool {
+        T::abs_diff_eq(&self.xmin, &other.xmin, epsilon)
+            && T::abs_diff_eq(&self.ymin, &other.ymin, epsilon)
+            && T::abs_diff_eq(&self.xmax, &other.xmax, epsilon)
+            && T::abs_diff_eq(&self.ymax, &other.ymax, epsilon)
     }
 }
 
@@ -126,6 +146,22 @@ mod tests {
         };
 
         assert_abs_diff_eq!(bbox.to_z(), array![10., 15., 200., 2.], epsilon = 0.0001);
+    }
+
+    #[test]
+    fn test_z_to_bbox() {
+        let bbox = Bbox::from_z(&[10., 15., 200., 2.]);
+
+        assert_abs_diff_eq!(
+            bbox,
+            Bbox::<f32> {
+                xmin: 0.,
+                ymin: 10.,
+                xmax: 20.,
+                ymax: 20.,
+            },
+            epsilon = 0.0001
+        );
     }
 
     #[test]
