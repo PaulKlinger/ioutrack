@@ -15,7 +15,7 @@ pub struct KalmanFilterParams<T: LinalgScalar + Lapack + Float> {
     /// shape = (dim_x)
     pub x: Array1<T>,
     /// initial state covariance matrix
-    /// shape = (dim_x)
+    /// shape = (dim_x, dim_x)
     pub p: Array2<T>,
     /// state transition matrix
     /// This is multiplied with the current state to
@@ -57,6 +57,37 @@ pub struct KalmanFilter<T: LinalgScalar + Lapack + Float> {
 impl<T: LinalgScalar + Lapack + Float> KalmanFilter<T> {
     /// Initialise Kalman filter with the given parameters
     pub fn new(params: KalmanFilterParams<T>) -> Self {
+        debug_assert_eq!(
+            params.x.shape(),
+            &[params.dim_x],
+            "Shape of x must be (dim_x)!"
+        );
+        debug_assert_eq!(
+            params.p.shape(),
+            &[params.dim_x, params.dim_x],
+            "Shape of p must be (dim_x, dim_x)!"
+        );
+        debug_assert_eq!(
+            params.f.shape(),
+            &[params.dim_x, params.dim_x],
+            "Shape of f must be (dim_x, dim_x)!"
+        );
+        debug_assert_eq!(
+            params.h.shape(),
+            &[params.dim_z, params.dim_x],
+            "Shape of h must be (dim_z, dim_x)!"
+        );
+        debug_assert_eq!(
+            params.r.shape(),
+            &[params.dim_z, params.dim_z],
+            "Shape of r must be (dim_z, dim_z)!"
+        );
+        debug_assert_eq!(
+            params.q.shape(),
+            &[params.dim_x, params.dim_x],
+            "Shape of q must be (dim_x, dim_x)!"
+        );
+
         KalmanFilter {
             x: params.x.insert_axis(Axis(1)),
             p: params.p,
