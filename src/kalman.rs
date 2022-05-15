@@ -40,6 +40,7 @@ pub struct KalmanFilterParams<T: LinalgScalar + Lapack + Float> {
 
 /// Linear Kalman filter
 /// use KalmanFilter::new to initialise
+#[derive(Debug, Clone)]
 pub struct KalmanFilter<T: LinalgScalar + Lapack + Float> {
     pub x: Array2<T>,
     pub p: Array2<T>,

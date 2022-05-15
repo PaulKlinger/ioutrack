@@ -120,20 +120,20 @@ pub fn intersection_areas<T: BboxNum>(boxes1: ArrayView2<T>, boxes2: ArrayView2<
 ///     epsilon = 0.0001
 /// );
 /// ```
-pub fn ious<T: BboxNum>(boxes1: ArrayView2<T>, boxes2: ArrayView2<T>) -> Array2<f64> {
+pub fn ious<T: BboxNum>(boxes1: ArrayView2<T>, boxes2: ArrayView2<T>) -> Array2<f32> {
     let intersections = intersection_areas(boxes1, boxes2);
     let areas1 = (&boxes1.slice(s![.., 2]) - &boxes1.slice(s![.., 0]))
         * (&boxes1.slice(s![.., 3]) - &boxes1.slice(s![.., 1]));
     let areas2 = (&boxes2.slice(s![.., 2]) - &boxes2.slice(s![.., 0]))
         * (&boxes2.slice(s![.., 3]) - &boxes2.slice(s![.., 1]));
 
-    let mut out: Array2<f64> = Array2::zeros(intersections.raw_dim());
+    let mut out: Array2<f32> = Array2::zeros(intersections.raw_dim());
     Zip::from(&mut out)
         .and(&intersections)
         .and_broadcast(&areas1.insert_axis(Axis(1)))
         .and_broadcast(&areas2.insert_axis(Axis(0)))
         .for_each(|o, &intersection, &area1, &area2| {
-            *o = intersection.to_f64().unwrap() / (area1 + area2 - intersection).to_f64().unwrap()
+            *o = intersection.to_f32().unwrap() / (area1 + area2 - intersection).to_f32().unwrap()
         });
     out
 }

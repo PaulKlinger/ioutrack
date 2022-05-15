@@ -118,6 +118,7 @@ dependencies = [
  "anyhow",
  "approx 0.5.1",
  "itertools",
+ "lapjv",
  "ndarray",
  "ndarray-linalg",
  "num",
@@ -155,6 +156,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "lapjv"
+version = "0.2.1"
+source = "git+https://github.com/PaulKlinger/lapjv-rust#58c7816387338785a87fe416e5477df47935610f"
+dependencies = [
+ "log",
+ "ndarray",
+ "num-traits",
+]
+
+[[package]]
 name = "lax"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -181,6 +192,15 @@ checksum = "327fa5b6a6940e4699ec49a9beae1ea4845c6bab9314e4f84ac68742139d8c53"
 dependencies = [
  "autocfg",
  "scopeguard",
+]
+
+[[package]]
+name = "log"
+version = "0.4.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "abb12e687cfb44aa40f41fc3978ef76448f9b6038cad6aef4259d3c095a2382e"
+dependencies = [
+ "cfg-if",
 ]
 
 [[package]]

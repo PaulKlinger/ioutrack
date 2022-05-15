@@ -2,7 +2,10 @@ use crate::bbox::Bbox;
 use crate::kalman::{KalmanFilter, KalmanFilterParams};
 use anyhow::Result;
 use ndarray::prelude::*;
+use pyo3::prelude::*;
 
+#[pyclass]
+#[derive(Debug, Clone)]
 pub struct KalmanBoxTracker {
     /// track id
     pub id: u32,

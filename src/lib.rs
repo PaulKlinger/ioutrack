@@ -11,6 +11,9 @@ use kalman::{KalmanFilter, KalmanFilterParams};
 
 pub mod box_tracker;
 
+mod sort;
+use sort::SORTTracker;
+
 pub mod bbox;
 use bbox::ious;
 
@@ -41,7 +44,7 @@ fn calc_ious<'py>(
     _py: Python<'py>,
     boxes1: PyReadonlyArray2<f64>,
     boxes2: PyReadonlyArray2<f64>,
-) -> PyResult<&'py PyArray2<f64>> {
+) -> PyResult<&'py PyArray2<f32>> {
     Ok(ious(boxes1.as_array(), boxes2.as_array()).into_pyarray(_py))
 }
 
@@ -79,6 +82,7 @@ fn ioutrack(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(array2_inv, m)?)?;
     m.add_function(wrap_pyfunction!(test_kalman, m)?)?;
     m.add_function(wrap_pyfunction!(calc_ious, m)?)?;
+    m.add_class::<SORTTracker>()?;
 
     Ok(())
 }
