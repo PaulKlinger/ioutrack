@@ -107,12 +107,11 @@ impl<T: LinalgScalar + Lapack + Float> KalmanFilter<T> {
     /// Predict next state and return mean of predicted distribution
     /// check KalmanFilter.p if you need the state covariance
     /// result shape = (dim_x)
-    pub fn predict(&mut self) -> Array1<T> {
+    pub fn predict(&mut self) -> ArrayView1<T> {
         self.x = self.f.dot(&self.x);
         self.p = self.f.dot(&self.p).dot(&self.f.t()) + &self.q;
 
-        // We clone the x, as the caller might do anything with it
-        self.x.slice(s![.., 0]).to_owned()
+        self.x.slice(s![.., 0])
     }
 
     /// Update estimate of the state given the measurement z and return mean
