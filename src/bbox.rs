@@ -2,6 +2,7 @@ use crate::num_utils::{partial_max, BboxNum};
 use approx::AbsDiffEq;
 use ndarray::prelude::*;
 use ndarray::Zip;
+use num::Float;
 
 use crate::ndarray_utils::*;
 
@@ -26,18 +27,42 @@ impl<T: BboxNum> Bbox<T> {
             width / height
         ]
     }
+
+    pub fn to_bounds(self) -> [T; 4] {
+        [self.xmin, self.ymin, self.xmax, self.ymax]
+    }
 }
-impl Bbox<f32> {
+
+impl<T: BboxNum> TryFrom<&[T]> for Bbox<T> {
+    type Error = &'static str;
+    fn try_from(bounds: &[T]) -> Result<Bbox<T>, Self::Error> {
+        match bounds.len() {
+            4 => Ok(Bbox {
+                xmin: bounds[0],
+                ymin: bounds[1],
+                xmax: bounds[2],
+                ymax: bounds[3],
+            }),
+            _ => Err("Slice must have 4 elements to convert to bbox!"),
+        }
+    }
+}
+
+impl<T> Bbox<T>
+where
+    T: BboxNum + Float,
+    f32: Into<T>,
+{
     /// Convert center_x, center_y, area, aspect_ratio representation to Bbox
-    pub fn from_z(z: &[f32]) -> Self {
+    pub fn from_z(z: &[T]) -> Self {
         // area = width * height = width**2 / aspect
         let width = (z[2] * z[3]).sqrt();
         let height = width / z[3];
         Self {
-            xmin: z[0] - width / 2.,
-            xmax: z[0] + width / 2.,
-            ymin: z[1] - height / 2.,
-            ymax: z[1] + height / 2.,
+            xmin: z[0] - width / 2.0.into(),
+            xmax: z[0] + width / 2.0.into(),
+            ymin: z[1] - height / 2.0.into(),
+            ymax: z[1] + height / 2.0.into(),
         }
     }
 }
