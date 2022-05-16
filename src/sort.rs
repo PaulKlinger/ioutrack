@@ -209,6 +209,8 @@ impl SORTTracker {
                 data.push(tracklet.id as f32);
             }
         }
+
+        self.n_steps += 1;
         Ok(Array2::from_shape_vec((data.len() / 5, 5), data)
             .unwrap()
             .into_pyarray(_py))
