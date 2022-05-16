@@ -112,14 +112,11 @@ impl KalmanBoxTracker {
         }
 
         let pred_x = self.kf.predict();
-        Bbox::from_z(pred_x.slice(s![0..4]).as_slice().unwrap())
+        Bbox::from_z(pred_x.slice(s![0..4])).unwrap()
     }
 
     pub fn bbox(&self) -> Bbox<f32> {
-        // wtf is this...
-        (&*(self.kf.x.slice(s![0..4, 0]).to_vec()))
-            .try_into()
-            .unwrap()
+        Bbox::from_z(self.kf.x.slice(s![0..4, 0])).unwrap()
     }
 }
 
@@ -142,7 +139,6 @@ mod tests {
             area_var: None,
             aspect_var: None,
         });
-        dbg!(&tracker.kf.x);
         tracker.predict();
         tracker
             .update(Bbox {

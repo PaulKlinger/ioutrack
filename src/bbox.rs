@@ -33,17 +33,17 @@ impl<T: BboxNum> Bbox<T> {
     }
 }
 
-impl<T: BboxNum> TryFrom<&[T]> for Bbox<T> {
+impl<'a, T: BboxNum> TryFrom<ArrayView1<'a, T>> for Bbox<T> {
     type Error = &'static str;
-    fn try_from(bounds: &[T]) -> Result<Bbox<T>, Self::Error> {
-        match bounds.len() {
+    fn try_from(bounds: ArrayView1<'a, T>) -> Result<Bbox<T>, Self::Error> {
+        match bounds.dim() {
             4 => Ok(Bbox {
                 xmin: bounds[0],
                 ymin: bounds[1],
                 xmax: bounds[2],
                 ymax: bounds[3],
             }),
-            _ => Err("Slice must have 4 elements to convert to bbox!"),
+            _ => Err("Array must have 4 elements to convert to bbox!"),
         }
     }
 }
@@ -54,16 +54,19 @@ where
     f32: Into<T>,
 {
     /// Convert center_x, center_y, area, aspect_ratio representation to Bbox
-    pub fn from_z(z: &[T]) -> Self {
+    pub fn from_z(z: ArrayView1<T>) -> anyhow::Result<Self> {
+        if z.dim() != 4 {
+            return Err(anyhow::anyhow!("z vector must have exactly 4 elements!"));
+        }
         // area = width * height = width**2 / aspect
         let width = (z[2] * z[3]).sqrt();
         let height = width / z[3];
-        Self {
+        Ok(Self {
             xmin: z[0] - width / 2.0.into(),
             xmax: z[0] + width / 2.0.into(),
             ymin: z[1] - height / 2.0.into(),
             ymax: z[1] + height / 2.0.into(),
-        }
+        })
     }
 }
 
@@ -182,7 +185,7 @@ mod tests {
 
     #[test]
     fn test_z_to_bbox() {
-        let bbox = Bbox::from_z(&[10., 15., 200., 2.]);
+        let bbox = Bbox::from_z(array![10., 15., 200., 2.].view()).unwrap();
 
         assert_abs_diff_eq!(
             bbox,
