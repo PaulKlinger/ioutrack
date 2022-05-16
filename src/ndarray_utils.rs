@@ -18,7 +18,7 @@ fn get_broadcast_shape(shape_a: &[usize], shape_b: &[usize]) -> anyhow::Result<V
                         "Inputs must have same shape or be broadcastable!"
                     ));
                 }
-                shape.push(if a_length > 1 { a_length } else { b_length });
+                shape.push(if a_length != 1 { a_length } else { b_length });
             }
             Left(&l) => shape.push(l),
             Right(&l) => shape.push(l),
