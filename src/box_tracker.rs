@@ -77,8 +77,8 @@ impl KalmanBoxTracker {
                 ]),
             }),
             age: 0,
-            hits: 0,
-            hit_streak: 0,
+            hits: 1,
+            hit_streak: 1,
             steps_since_update: 0,
         }
     }
@@ -108,6 +108,13 @@ impl KalmanBoxTracker {
 
         let pred_x = self.kf.predict();
         Bbox::from_z(pred_x.slice(s![0..4]).as_slice().unwrap())
+    }
+
+    pub fn bbox(&self) -> Bbox<f32> {
+        // wtf is this...
+        (&*(self.kf.x.slice(s![0..4, 0]).to_vec()))
+            .try_into()
+            .unwrap()
     }
 }
 
