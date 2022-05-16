@@ -5,7 +5,7 @@ use numpy::pyo3::prelude::*;
 use numpy::{IntoPyArray, PyArray2, PyReadonlyArray2};
 use std::collections::HashMap;
 
-use lapjv::lapjv;
+use lapjv::lapjv_rect;
 
 use crate::bbox::{ious, Bbox};
 use crate::box_tracker::{KalmanBoxTracker, KalmanBoxTrackerParams};
@@ -36,7 +36,7 @@ fn assign_detections_to_tracks(
 ) -> anyhow::Result<(MatchedBoxes, UnmatchedBoxes)> {
     let mut det_track_ious = ious(detections, tracks);
     det_track_ious.mapv_inplace(|x| -x);
-    let (track_idxs, _) = lapjv(det_track_ious.view())?;
+    let (track_idxs, _) = lapjv_rect(det_track_ious.view())?;
 
     let mut match_updates = Vec::new();
     let mut unmatched_dets = Vec::new();

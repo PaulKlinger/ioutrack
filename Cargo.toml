@@ -17,4 +17,4 @@ numpy = "0.16.2"
 num = "0.4.0"
 anyhow = "1.0.57"
 itertools = "0.10.3"
-lapjv = { git = "https://github.com/PaulKlinger/lapjv-rust", rev="1d3700a" }
+lapjv = { git = "https://github.com/PaulKlinger/lapjv-rust", rev="12527061a3" }
