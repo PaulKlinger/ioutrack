@@ -8,16 +8,21 @@ use pyo3::prelude::*;
 #[derive(Debug, Clone)]
 pub struct KalmanBoxTracker {
     /// track id
+    #[pyo3(get)]
     pub id: u32,
     /// Kalman filter tracking bbox state
     kf: KalmanFilter<f32>,
     /// number of steps tracker has been run for (each predict() is one step)
+    #[pyo3(get)]
     pub age: u32,
     /// number of steps with matching detection box
+    #[pyo3(get)]
     pub hits: u32,
     /// number of consecutive steps with matched box
+    #[pyo3(get)]
     pub hit_streak: u32,
     /// number of consecutive steps predicted without receiving box
+    #[pyo3(get)]
     pub steps_since_update: u32,
 }
 
