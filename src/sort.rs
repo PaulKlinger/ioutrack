@@ -40,23 +40,19 @@ fn assign_detections_to_tracks(
 
     let mut match_updates = Vec::new();
     let mut unmatched_dets = Vec::new();
-    for (det_idx, maybe_track_idx) in std::iter::zip(0..detections.len(), track_idxs) {
-        let det_box = Bbox {
-            xmin: detections[(det_idx, 0)],
-            ymin: detections[(det_idx, 1)],
-            xmax: detections[(det_idx, 2)],
-            ymax: detections[(det_idx, 3)],
-        };
+    for (det_idx, &maybe_track_idx) in track_idxs.iter().enumerate() {
+        let det_box = detections.slice(s![det_idx, 0..4]).try_into().unwrap();
+        let score = detections[(det_idx, 4)];
         match maybe_track_idx {
             Some(track_idx) => {
                 // we negated the ious, so negate again here
                 if -det_track_ious[(det_idx, track_idx)] > iou_threshold {
                     match_updates.push((tracks[(track_idx, 4)] as u32, det_box))
                 } else {
-                    unmatched_dets.push((detections[(det_idx, 4)], det_box));
+                    unmatched_dets.push((score, det_box));
                 }
             }
-            None => unmatched_dets.push((detections[(det_idx, 4)], det_box)),
+            None => unmatched_dets.push((score, det_box)),
         }
     }
 
@@ -75,7 +71,7 @@ fn assign_detections_to_tracks(
 ///     minimum IOU to assign detection to tracklet
 /// init_score_threshold
 ///     minimum score to create a new tracklet from unmatched detection box
-#[pyclass(text_signature = "(max_age=1, min_hits=3, iou_threshold=0.3, init_score_threshold=0.7)")]
+#[pyclass(text_signature = "(max_age=1, min_hits=3, iou_threshold=0.3, init_score_threshold=0.0)")]
 pub struct SORTTracker {
     #[pyo3(get, set)]
     pub max_age: u32,
@@ -114,7 +110,7 @@ impl SORTTracker {
         max_age = "1",
         min_hits = "3",
         iou_threshold = "0.3",
-        init_score_threshold = "0.7"
+        init_score_threshold = "0.0"
     )]
     fn py_new(max_age: u32, min_hits: u32, iou_threshold: f32, init_score_threshold: f32) -> Self {
         SORTTracker {
@@ -204,7 +200,8 @@ impl SORTTracker {
 
         let mut data = Vec::new();
         for (_, tracklet) in self.tracklets.iter() {
-            if return_all || tracklet.hit_streak >= self.min_hits {
+            if return_all || (tracklet.hit_streak >= self.min_hits || self.n_steps < self.min_hits)
+            {
                 data.extend(tracklet.bbox().to_bounds());
                 data.push(tracklet.id as f32);
             }

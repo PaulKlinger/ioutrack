@@ -10,7 +10,7 @@ class SORTTracker:
     tracklets: list[KalmanBoxTracker]
     n_steps: int
 
-    def __new__(self, max_age: int = 1, min_hits: int = 3, iou_threshold: float = 0.3, init_score_threshold: float = 0.7):
+    def __new__(self, max_age: int = 1, min_hits: int = 3, iou_threshold: float = 0.3, init_score_threshold: float = 0.0):
         """Create a new SORT bbox tracker
 
         Parameters
