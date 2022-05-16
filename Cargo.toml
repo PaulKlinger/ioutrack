@@ -9,7 +9,7 @@ name = "ioutrack"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-pyo3 = { version = "0.16.3", features = ["extension-module"] }
+pyo3 = { version = "0.16.3", features = ["extension-module", "anyhow"] }
 ndarray = {version = "0.15.4", features = ["approx-0_5"]}
 approx = "0.5.1"
 ndarray-linalg = {version = "0.14.1", features = ["openblas-static"]}
@@ -17,4 +17,4 @@ numpy = "0.16.2"
 num = "0.4.0"
 anyhow = "1.0.57"
 itertools = "0.10.3"
-lapjv = { git = "https://github.com/PaulKlinger/lapjv-rust" }
+lapjv = { git = "https://github.com/PaulKlinger/lapjv-rust", rev="1d3700a" }
