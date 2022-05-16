@@ -10,8 +10,8 @@ use lapjv::lapjv_rect;
 use crate::bbox::{ious, Bbox};
 use crate::box_tracker::{KalmanBoxTracker, KalmanBoxTrackerParams};
 
-type MatchedBoxes = Vec<(u32, Bbox<f32>)>;
-type UnmatchedBoxes = Vec<(f32, Bbox<f32>)>;
+type TrackidBoxes = Vec<(u32, Bbox<f32>)>;
+type ScoreBoxes = Vec<(f32, Bbox<f32>)>;
 
 /// Assign detection boxes to track boxes
 ///
@@ -33,7 +33,7 @@ fn assign_detections_to_tracks(
     detections: ArrayView2<f32>,
     tracks: ArrayView2<f32>,
     iou_threshold: f32,
-) -> anyhow::Result<(MatchedBoxes, UnmatchedBoxes)> {
+) -> anyhow::Result<(TrackidBoxes, ScoreBoxes)> {
     let mut det_track_ious = ious(detections, tracks);
     det_track_ious.mapv_inplace(|x| -x);
     let (track_idxs, _) = lapjv_rect(det_track_ious.view())?;
@@ -92,14 +92,71 @@ pub struct SORTTracker {
 }
 
 impl SORTTracker {
-    fn get_tracklet_boxes(&mut self) -> Array2<f32> {
+    fn predict(&mut self) -> Array2<f32> {
         let mut data = Vec::with_capacity(self.tracklets.len() * 5);
-        for (_, t) in self.tracklets.iter_mut() {
-            let b = t.predict();
+        for (_, tracklet) in self.tracklets.iter_mut() {
+            let b = tracklet.predict();
             data.extend(b.to_bounds());
-            data.push(cast(t.id).unwrap());
+            data.push(cast(tracklet.id).unwrap());
         }
         Array2::from_shape_vec((self.tracklets.len(), 5), data).unwrap()
+    }
+
+    fn get_tracklet_boxes(&self, return_all: bool) -> Array2<f32> {
+        let mut data = Vec::new();
+        for (_, tracklet) in self.tracklets.iter() {
+            if return_all || (tracklet.hit_streak >= self.min_hits || self.n_steps < self.min_hits)
+            {
+                data.extend(tracklet.bbox().to_bounds());
+                data.push(cast(tracklet.id).unwrap());
+            }
+        }
+        Array2::from_shape_vec((data.len() / 5, 5), data).unwrap()
+    }
+
+    fn create_tracklets(&mut self, score_boxes: ScoreBoxes) {
+        for (score, bbox) in score_boxes {
+            if score >= self.init_score_threshold {
+                self.tracklets.insert(
+                    self.next_track_id,
+                    KalmanBoxTracker::new(KalmanBoxTrackerParams {
+                        id: self.next_track_id,
+                        bbox,
+                        center_var: None,
+                        area_var: None,
+                        aspect_var: None,
+                    }),
+                );
+                self.next_track_id += 1
+            }
+        }
+    }
+
+    fn update(
+        &mut self,
+        detection_boxes: CowArray<f32, Ix2>,
+        return_all: bool,
+    ) -> anyhow::Result<Array2<f32>> {
+        let tracklet_boxes = self.predict();
+
+        let (matched_boxes, unmatched_detections) = assign_detections_to_tracks(
+            detection_boxes.view(),
+            tracklet_boxes.view(),
+            self.iou_threshold,
+        )?;
+
+        for (track_id, bbox) in matched_boxes {
+            self.tracklets.get_mut(&track_id).unwrap().update(bbox)?;
+        }
+
+        // remove stale tracklets
+        self.tracklets
+            .retain(|_, tracklet| tracklet.steps_since_update <= self.max_age);
+
+        self.create_tracklets(unmatched_detections);
+
+        self.n_steps += 1;
+        Ok(self.get_tracklet_boxes(return_all))
     }
 }
 
@@ -141,8 +198,8 @@ impl SORTTracker {
     ///    array of tracklet boxes with shape (n_tracks, 5)
     ///    of the form [[xmin1, ymin1, xmax1, ymax1, track_id1], [xmin2,...],...]
     #[args(boxes, return_all = "false")]
-    #[pyo3(text_signature = "(boxes, return_all = False)")]
-    fn update<'py>(
+    #[pyo3(name = "update", text_signature = "(boxes, return_all = False)")]
+    fn py_update<'py>(
         &mut self,
         _py: Python<'py>,
         boxes: &'py PyAny,
@@ -166,50 +223,27 @@ impl SORTTracker {
             ));
         }
 
-        let tracklet_boxes = self.get_tracklet_boxes();
+        return Ok(self.update(detection_boxes, return_all)?.into_pyarray(_py));
+    }
+}
 
-        let (matched_boxes, unmatched_detections) = assign_detections_to_tracks(
-            detection_boxes.view(),
-            tracklet_boxes.view(),
-            self.iou_threshold,
-        )?;
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use approx::assert_abs_diff_eq;
 
-        for (track_id, bbox) in matched_boxes {
-            self.tracklets.get_mut(&track_id).unwrap().update(bbox)?;
-        }
-
-        // remove stale tracklets
-        self.tracklets
-            .retain(|_, tracklet| tracklet.steps_since_update <= self.max_age);
-
-        for (score, bbox) in unmatched_detections {
-            if score >= self.init_score_threshold {
-                self.tracklets.insert(
-                    self.next_track_id,
-                    KalmanBoxTracker::new(KalmanBoxTrackerParams {
-                        id: self.next_track_id,
-                        bbox,
-                        center_var: None,
-                        area_var: None,
-                        aspect_var: None,
-                    }),
-                );
-                self.next_track_id += 1
-            }
-        }
-
-        let mut data = Vec::new();
-        for (_, tracklet) in self.tracklets.iter() {
-            if return_all || (tracklet.hit_streak >= self.min_hits || self.n_steps < self.min_hits)
-            {
-                data.extend(tracklet.bbox().to_bounds());
-                data.push(tracklet.id as f32);
-            }
-        }
-
-        self.n_steps += 1;
-        Ok(Array2::from_shape_vec((data.len() / 5, 5), data)
-            .unwrap()
-            .into_pyarray(_py))
+    #[test]
+    fn test_first_update() {
+        let mut tracker = SORTTracker::py_new(1, 3, 0.3, 0.3);
+        assert_abs_diff_eq!(
+            tracker
+                .update(
+                    array![[0.0, 1.5, 12.6, 25.0, 0.9], [-5.5, 18.0, 1.0, 20.0, 0.15]].into(),
+                    false
+                )
+                .unwrap(),
+            array![[0.0, 1.5, 12.6, 25.0, 1.0]],
+            epsilon = 0.00001
+        )
     }
 }
