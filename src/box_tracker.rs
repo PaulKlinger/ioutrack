@@ -49,7 +49,7 @@ impl KalmanBoxTracker {
                 dim_x: 7, // center_x, center_y, area, aspect_ratio, vel_x, vel_y, vel_area
                 dim_z: 4, // center_x, center_y, area, aspect_ratio
                 x: ndarray::concatenate![Axis(0), p.bbox.to_z(), array![0., 0., 0.]],
-                p: Array2::from_diag(&array![10., 10., 1000., 0.5, 1000., 1000., 1000.]),
+                p: Array2::from_diag(&array![10., 10., 10., 10., 10000., 10000., 10000.]),
                 f: array![
                     [1., 0., 0., 0., 1., 0., 0.], // center_x' = center_x + vel_x
                     [0., 1., 0., 0., 0., 1., 0.], // center_y' = center_y + vel_y
@@ -69,21 +69,21 @@ impl KalmanBoxTracker {
                     p.center_var.unwrap_or(1.),
                     p.center_var.unwrap_or(1.),
                     p.area_var.unwrap_or(10.),
-                    p.aspect_var.unwrap_or(0.01)
+                    p.aspect_var.unwrap_or(10.)
                 ]),
                 q: Array2::from_diag(&array![
                     p.center_var.unwrap_or(1.),
                     p.center_var.unwrap_or(1.),
-                    p.area_var.unwrap_or(10.),
-                    p.aspect_var.unwrap_or(0.01),
+                    p.area_var.unwrap_or(1.),
+                    p.aspect_var.unwrap_or(1.),
                     0.01,
                     0.01,
                     0.0001
                 ]),
             }),
             age: 0,
-            hits: 1,
-            hit_streak: 1,
+            hits: 0,
+            hit_streak: 0,
             steps_since_update: 0,
         }
     }
@@ -104,6 +104,9 @@ impl KalmanBoxTracker {
     /// Predict box position in next step
     pub fn predict(&mut self) -> Bbox<f32> {
         self.age += 1;
+        if self.steps_since_update > 0 {
+            self.hit_streak = 0;
+        }
         self.steps_since_update += 1;
         // next predict would cause area to be non-positive...
         if self.kf.x[[2, 0]] + self.kf.x[[6, 0]] <= 0. {
@@ -154,10 +157,10 @@ mod tests {
         assert_abs_diff_eq!(
             pred,
             Bbox {
-                xmin: 10.0785,
-                xmax: 19.7931,
-                ymin: -0.18678,
-                ymax: 4.1932
+                xmin: 10.392181,
+                xmax: 19.594833,
+                ymin: -0.173802,
+                ymax: 4.1744514
             },
             epsilon = 0.0001
         );
