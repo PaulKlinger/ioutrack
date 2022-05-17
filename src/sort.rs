@@ -3,7 +3,7 @@ use numpy::ndarray::prelude::*;
 use numpy::pyo3::exceptions::PyValueError;
 use numpy::pyo3::prelude::*;
 use numpy::{IntoPyArray, PyArray2, PyReadonlyArray2};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use lapjv::lapjv_rect;
 
@@ -85,7 +85,7 @@ pub struct SORTTracker {
     next_track_id: u32,
     /// current tracklets
     #[pyo3(get)]
-    pub tracklets: HashMap<u32, KalmanBoxTracker>,
+    pub tracklets: BTreeMap<u32, KalmanBoxTracker>,
     /// number of steps the tracker has run for
     #[pyo3(get)]
     pub n_steps: u32,
@@ -105,7 +105,9 @@ impl SORTTracker {
     fn get_tracklet_boxes(&self, return_all: bool) -> Array2<f32> {
         let mut data = Vec::new();
         for (_, tracklet) in self.tracklets.iter() {
-            if return_all || (tracklet.hit_streak >= self.min_hits || self.n_steps < self.min_hits)
+            if return_all
+                || (tracklet.steps_since_update < 1
+                    && (tracklet.hit_streak >= self.min_hits || self.n_steps <= self.min_hits))
             {
                 data.extend(tracklet.bbox().to_bounds());
                 data.push(cast(tracklet.id).unwrap());
@@ -176,7 +178,7 @@ impl SORTTracker {
             iou_threshold,
             init_score_threshold,
             next_track_id: 1,
-            tracklets: HashMap::new(),
+            tracklets: BTreeMap::new(),
             n_steps: 0,
         }
     }
