@@ -1,7 +1,6 @@
 import numpy as np
 import numpy.typing as npt
 
-
 class SORTTracker:
     max_age: int
     min_hits: int
@@ -10,7 +9,13 @@ class SORTTracker:
     tracklets: list[KalmanBoxTracker]
     n_steps: int
 
-    def __new__(self, max_age: int = 1, min_hits: int = 3, iou_threshold: float = 0.3, init_score_threshold: float = 0.0):
+    def __new__(
+        self,
+        max_age: int = 1,
+        min_hits: int = 3,
+        iou_threshold: float = 0.3,
+        init_score_threshold: float = 0.0,
+    ) -> SORTTracker:
         """Create a new SORT bbox tracker
 
         Parameters
@@ -25,8 +30,9 @@ class SORTTracker:
             minimum score to create a new tracklet from unmatched detection box
         """
         ...
-
-    def update(self, boxes: npt.NDArray[np.float32 | np.float64], return_all: bool) -> npt.NDArray[np.float32]:
+    def update(
+        self, boxes: npt.NDArray[np.float32 | np.float64], return_all: bool
+    ) -> npt.NDArray[np.float32]:
         """Update the tracker with new boxes and return position of current tracklets
 
         Parameters
