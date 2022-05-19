@@ -3,3 +3,4 @@ numpy == 1.22.3
 pandas == 1.4.2
 matplotlib == 3.5.2
 opencv-python == 4.5.5
+mypy == 0.950
