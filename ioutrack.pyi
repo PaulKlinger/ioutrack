@@ -5,7 +5,7 @@ class SORTTracker:
     max_age: int
     min_hits: int
     iou_threshold: float
-    init_score_threshold: float
+    init_tracker_min_score: float
     tracklets: list[KalmanBoxTracker]
     n_steps: int
 
@@ -14,7 +14,7 @@ class SORTTracker:
         max_age: int = 1,
         min_hits: int = 3,
         iou_threshold: float = 0.3,
-        init_score_threshold: float = 0.0,
+        init_tracker_min_score: float = 0.0,
     ) -> SORTTracker:
         """Create a new SORT bbox tracker
 
@@ -26,7 +26,7 @@ class SORTTracker:
             minimum number of successive detections before a tracklet is set to alive
         iou_threshold
             minimum IOU to assign detection to tracklet
-        init_score_threshold
+        init_tracker_min_score
             minimum score to create a new tracklet from unmatched detection box
         """
         ...

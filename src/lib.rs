@@ -6,10 +6,10 @@ mod num_utils;
 
 pub mod bbox;
 pub mod box_tracker;
-pub mod sort;
+pub mod trackers;
 
 use box_tracker::KalmanBoxTracker;
-pub use sort::SORTTracker;
+pub use trackers::SORTTracker;
 
 /// A Python module implemented in Rust.
 #[pymodule]
