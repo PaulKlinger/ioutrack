@@ -19,6 +19,8 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     steps:
+    - name: install deps
+      run: sudo apt-get install libssl-dev
     - uses: actions/checkout@v2
     - uses: messense/maturin-action@v1
       with:
