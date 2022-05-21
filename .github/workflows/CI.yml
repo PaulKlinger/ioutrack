@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: install deps
-      run: sudo apt-get update && sudo apt-get install -y libssl1.1="1.1.1f-1ubuntu2"
+      run: sudo apt-get update && sudo apt-get install -y --allow-downgrades libssl1.1="1.1.1f-1ubuntu2"
     - uses: actions/checkout@v2
     - uses: messense/maturin-action@v1
       with:
