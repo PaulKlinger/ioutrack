@@ -1,10 +1,10 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 use ioutrack::SORTTracker;
 use ndarray::prelude::*;
 use ndarray_npy::read_npy;
 
 fn run_sort_on_dets(dets: &Array2<f32>, frame_borders: &Array1<usize>) {
-    let mut tracker = SORTTracker::py_new(25, 2, 0.3, 0.5);
+    let mut tracker = SORTTracker::new(25, 2, 0.3, 0.5);
     let mut first_i: usize = 0;
     for &last_i in frame_borders.iter() {
         tracker

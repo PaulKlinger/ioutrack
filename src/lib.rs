@@ -9,7 +9,7 @@ pub mod box_tracker;
 pub mod sort;
 
 use box_tracker::KalmanBoxTracker;
-use sort::SORTTracker;
+pub use sort::SORTTracker;
 
 /// A Python module implemented in Rust.
 #[pymodule]

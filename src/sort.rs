@@ -134,7 +134,7 @@ impl SORTTracker {
         }
     }
 
-    fn update(
+    pub fn update(
         &mut self,
         detection_boxes: CowArray<f32, Ix2>,
         return_all: bool,
@@ -171,7 +171,7 @@ impl SORTTracker {
         iou_threshold = "0.3",
         init_score_threshold = "0.0"
     )]
-    fn py_new(max_age: u32, min_hits: u32, iou_threshold: f32, init_score_threshold: f32) -> Self {
+    pub fn new(max_age: u32, min_hits: u32, iou_threshold: f32, init_score_threshold: f32) -> Self {
         SORTTracker {
             max_age,
             min_hits,
@@ -236,7 +236,7 @@ mod tests {
 
     #[test]
     fn test_first_update() {
-        let mut tracker = SORTTracker::py_new(1, 3, 0.3, 0.3);
+        let mut tracker = SORTTracker::new(1, 3, 0.3, 0.3);
         assert_abs_diff_eq!(
             tracker
                 .update(
