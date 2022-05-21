@@ -19,13 +19,15 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     steps:
-    - name: install deps
-      run: sudo apt-get update && sudo apt-get install -y --allow-downgrades libssl1.1="1.1.1f-1ubuntu2"
     - uses: actions/checkout@v2
+    - name: build docker image
+      run: |
+        cd .github/workflows && sudo docker build -t ioutrack_manylinux:latest .
     - uses: messense/maturin-action@v1
       with:
         manylinux: auto
         command: build
+        container: ioutrack_manylinux:latest
         args: --release -o dist
     - name: Upload wheels
       uses: actions/upload-artifact@v2
