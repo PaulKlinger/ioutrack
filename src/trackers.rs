@@ -257,8 +257,13 @@ impl SORTTracker {
 ///     minimum IOU to assign detection to tracklet
 /// init_tracker_min_score
 ///     minimum score to create a new tracklet from unmatched detection box
+/// high_score_threshold
+///     boxes with higher scores than this will be used in the first round of association
+/// low_score_threshold
+///     boxes with score between low_score_threshold and high_score_threshold
+///     will be used in the second round of association
 #[pyclass(
-    text_signature = "(max_age=1, min_hits=3, iou_threshold=0.3, init_tracker_min_score=0.0, high_score_threshold=0.7, low_score_threshold=0.1)"
+    text_signature = "(max_age=1, min_hits=3, iou_threshold=0.3, init_tracker_min_score=0.8, high_score_threshold=0.7, low_score_threshold=0.1)"
 )]
 pub struct ByteTrack {
     #[pyo3(get, set)]
@@ -344,7 +349,9 @@ impl ByteTrack {
         max_age = "1",
         min_hits = "3",
         iou_threshold = "0.3",
-        init_tracker_min_score = "0.0"
+        init_tracker_min_score = "0.8",
+        high_score_threshold = "0.7",
+        low_score_threshold = "0.1"
     )]
     pub fn new(
         max_age: u32,
