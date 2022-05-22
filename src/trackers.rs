@@ -298,16 +298,39 @@ impl ByteTrack {
     ) -> anyhow::Result<Array2<f32>> {
         let tracklet_boxes = self.sort_tracker.predict();
 
-        let (high_score_detections, _low_score_detections) = self.split_detections(detection_boxes);
+        let (high_score_detections, low_score_detections) = self.split_detections(detection_boxes);
 
-        let unmatched_detections = self
+        let unmatched_high_score_detections = self
             .sort_tracker
             .update_tracklets(high_score_detections.view(), tracklet_boxes.view())?;
-        //TODO: assemble detections into array, get unmatched tracks & update again
+
+        let unmatched_track_box_data: Vec<f32> = tracklet_boxes
+            .outer_iter()
+            .zip(
+                self.sort_tracker
+                    .tracklets
+                    .iter()
+                    .map(|(_, tracker)| tracker.steps_since_update == 0),
+            )
+            .filter_map(|(box_arr, matched)| if matched { None } else { Some(box_arr) })
+            .flatten()
+            .copied()
+            .collect();
+        let unmatched_track_boxes: Array2<f32> = Array2::from_shape_vec(
+            (unmatched_track_box_data.len() / 5, 5),
+            unmatched_track_box_data,
+        )?;
+
+        let unmatched_low_score_detections = self
+            .sort_tracker
+            .update_tracklets(low_score_detections.view(), unmatched_track_boxes.view())?;
 
         self.sort_tracker.remove_stale_tracklets();
 
-        self.sort_tracker.create_tracklets(unmatched_detections);
+        self.sort_tracker
+            .create_tracklets(unmatched_high_score_detections);
+        self.sort_tracker
+            .create_tracklets(unmatched_low_score_detections);
 
         self.sort_tracker.n_steps += 1;
         Ok(self.sort_tracker.get_tracklet_boxes(return_all))
