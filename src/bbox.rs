@@ -127,9 +127,9 @@ pub fn intersection_areas<T: BboxNum>(boxes1: ArrayView2<T>, boxes2: ArrayView2<
 }
 
 /// Calculate IntersectionOverUnion of all combinations of a box from boxes1 and one from boxes2
-/// Both are in format [[xmin1, ymin1, xmax1, ymax1], [xmin2,...],...]
-/// boxes1 shape = (n, 4)
-/// boxes2 shape = (m, 4)
+/// Both are in format [[xmin1, ymin1, xmax1, ymax1, (score)], [xmin2,...],...]
+/// boxes1 shape = (n, 4/5)
+/// boxes2 shape = (m, 4/5)
 /// result shape = (n, m)
 ///
 /// # Examples

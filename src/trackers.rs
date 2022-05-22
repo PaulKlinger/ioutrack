@@ -285,14 +285,14 @@ impl ByteTrack {
                 continue;
             };
             if score > self.high_score_threshold {
-                high_score_data.extend(box_row.slice(s![0..4]));
+                high_score_data.extend(box_row);
             } else {
-                low_score_data.extend(box_row.slice(s![0..4]));
+                low_score_data.extend(box_row);
             }
         }
         (
-            Array2::from_shape_vec((high_score_data.len() / 4, 4), high_score_data).unwrap(),
-            Array2::from_shape_vec((low_score_data.len() / 4, 4), low_score_data).unwrap(),
+            Array2::from_shape_vec((high_score_data.len() / 5, 5), high_score_data).unwrap(),
+            Array2::from_shape_vec((low_score_data.len() / 5, 5), low_score_data).unwrap(),
         )
     }
 
