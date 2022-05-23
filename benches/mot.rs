@@ -47,9 +47,10 @@ pub fn criterion_mot_bytetrack_benchmark(c: &mut Criterion) {
     });
 }
 
-criterion_group!(
-    benches,
-    criterion_mot_sort_benchmark,
-    criterion_mot_bytetrack_benchmark
-);
+criterion_group! {
+    name=benches;
+    config = Criterion::default().sample_size(50).measurement_time(std::time::Duration::new(15, 0));
+    targets = criterion_mot_sort_benchmark,
+              criterion_mot_bytetrack_benchmark
+}
 criterion_main!(benches);
