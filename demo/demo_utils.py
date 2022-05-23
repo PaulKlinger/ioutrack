@@ -91,14 +91,16 @@ def get_annotated_frame(frame_boxes: pd.DataFrame) -> np.ndarray:
     return img
 
 
-def run_tracker(tracker: Any, boxes: pd.DataFrame) -> pd.DataFrame:
+def run_tracker(
+    tracker: Any, boxes: pd.DataFrame, return_all: bool = False
+) -> pd.DataFrame:
     tracks = []
     frame_paths = boxes["img_path"].to_dict()
     for frame_id in tqdm(range(boxes.index.min(), boxes.index.max() + 1)):
         frame_boxes = boxes.loc[frame_id:frame_id]
         track_boxes = frame_boxes[["xmin", "ymin", "xmax", "ymax", "score"]].values
 
-        frame_tracks = tracker.update(track_boxes)
+        frame_tracks = tracker.update(track_boxes, return_all=return_all)
         tracks.append(
             np.concatenate(
                 (frame_tracks, frame_id * np.ones((frame_tracks.shape[0], 1))), axis=1
