@@ -22,7 +22,7 @@ lapjv = { git = "https://github.com/PaulKlinger/lapjv-rust", rev="12527061a3" }
 ndarray-linalg = {version = "0.14.1", features = ["intel-mkl-static"]}
 
 [target.'cfg(target_os = "macos")'.dependencies]
-ndarray-linalg = {version = "0.14.1", features = ["intel-mkl-system"]}
+ndarray-linalg = {version = "0.14.1", features = ["openblas-static"]}
 
 [dev-dependencies]
 ndarray-npy = "0.8.1"
