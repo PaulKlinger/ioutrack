@@ -1,5 +1,6 @@
 import numpy as np
 import numpy.typing as npt
+from typing import Union
 
 class SORTTracker:
     max_age: int
@@ -15,6 +16,16 @@ class SORTTracker:
         min_hits: int = 3,
         iou_threshold: float = 0.3,
         init_tracker_min_score: float = 0.0,
+        measurement_noise: tuple[float, float, float, float] = (1.0, 1.0, 10.0, 0.05),
+        process_noiselist: tuple[float, float, float, float, float, float, float] = (
+            1.0,
+            1.0,
+            1.0,
+            0.001,
+            0.01,
+            0.01,
+            0.0001,
+        ),
     ) -> SORTTracker:
         """Create a new SORT bbox tracker
 
@@ -31,7 +42,7 @@ class SORTTracker:
         """
         ...
     def update(
-        self, boxes: npt.NDArray[np.float32 | np.float64], return_all: bool
+        self, boxes: npt.NDArray[Union[np.float32, np.float64]], return_all: bool
     ) -> npt.NDArray[np.float32]:
         """Update the tracker with new boxes and return position of current tracklets
 
@@ -68,6 +79,16 @@ class ByteTrack:
         init_tracker_min_score: float = 0.8,
         high_score_threshold: float = 0.7,
         low_score_threshold: float = 0.1,
+        measurement_noise: tuple[float, float, float, float] = (1.0, 1.0, 10.0, 0.05),
+        process_noiselist: tuple[float, float, float, float, float, float, float] = (
+            1.0,
+            1.0,
+            1.0,
+            0.001,
+            0.01,
+            0.01,
+            0.0001,
+        ),
     ) -> SORTTracker:
         """Create a new SORT bbox tracker
 
@@ -86,10 +107,16 @@ class ByteTrack:
         low_score_threshold
             boxes with score between low_score_threshold and high_score_threshold
             will be used in the second round of association
+        measurement_variance
+            diagonal of the measurement noise covariance matrix
+            i.e. measurement uncertainty of bbox (x, y, area, aspect_ratio)
+        process_variance
+            diagonal of the process noise covariance matrix
+            i.e. uncertainty in the step transition of (x, y, area, aspect_ratio, x_vel, y_vel, area_vel)
         """
         ...
     def update(
-        self, boxes: npt.NDArray[np.float32 | np.float64], return_all: bool
+        self, boxes: npt.NDArray[Union[np.float32, np.float64]], return_all: bool
     ) -> npt.NDArray[np.float32]:
         """Update the tracker with new boxes and return position of current tracklets
 

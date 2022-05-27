@@ -72,7 +72,7 @@ fn assign_detections_to_tracks(
 /// init_tracker_min_score
 ///     minimum score to create a new tracklet from unmatched detection box
 #[pyclass(
-    text_signature = "(max_age=1, min_hits=3, iou_threshold=0.3, init_tracker_min_score=0.0)"
+    text_signature = "(max_age=1, min_hits=3, iou_threshold=0.3, init_tracker_min_score=0.0, measurement_noise=[1., 1., 10., 0.05], process_noise=[1., 1., 1., 0.001, 0.01, 0.01, 0.0001]))"
 )]
 pub struct SORTTracker {
     #[pyo3(get, set)]
@@ -85,6 +85,8 @@ pub struct SORTTracker {
     pub init_tracker_min_score: f32,
     /// id of next tracklet initialized
     next_track_id: u32,
+    measurement_noise: [f32; 4],
+    process_noise: [f32; 7],
     /// current tracklets
     #[pyo3(get)]
     pub tracklets: BTreeMap<u32, KalmanBoxTracker>,
@@ -126,9 +128,8 @@ impl SORTTracker {
                     KalmanBoxTracker::new(KalmanBoxTrackerParams {
                         id: self.next_track_id,
                         bbox,
-                        center_var: None,
-                        area_var: None,
-                        aspect_var: None,
+                        meas_var: Some(self.measurement_noise),
+                        proc_var: Some(self.process_noise),
                     }),
                 );
                 self.next_track_id += 1
@@ -180,19 +181,25 @@ impl SORTTracker {
         max_age = "1",
         min_hits = "3",
         iou_threshold = "0.3",
-        init_tracker_min_score = "0.0"
+        init_tracker_min_score = "0.0",
+        measurement_noise = "[1., 1., 10., 0.05]",
+        process_noise = "[1., 1., 1., 0.001, 0.01, 0.01, 0.0001]"
     )]
     pub fn new(
         max_age: u32,
         min_hits: u32,
         iou_threshold: f32,
         init_tracker_min_score: f32,
+        measurement_noise: [f32; 4],
+        process_noise: [f32; 7],
     ) -> Self {
         SORTTracker {
             max_age,
             min_hits,
             iou_threshold,
             init_tracker_min_score,
+            measurement_noise,
+            process_noise,
             next_track_id: 1,
             tracklets: BTreeMap::new(),
             n_steps: 0,
@@ -263,7 +270,7 @@ impl SORTTracker {
 ///     boxes with score between low_score_threshold and high_score_threshold
 ///     will be used in the second round of association
 #[pyclass(
-    text_signature = "(max_age=1, min_hits=3, iou_threshold=0.3, init_tracker_min_score=0.8, high_score_threshold=0.7, low_score_threshold=0.1)"
+    text_signature = "(max_age=1, min_hits=3, iou_threshold=0.3, init_tracker_min_score=0.8, high_score_threshold=0.7, low_score_threshold=0.1, measurement_noise=[1., 1., 10., 10.], process_noise=[1., 1., 1., 1., 0.01, 0.01, 0.0001])"
 )]
 pub struct ByteTrack {
     #[pyo3(get, set)]
@@ -351,8 +358,11 @@ impl ByteTrack {
         iou_threshold = "0.3",
         init_tracker_min_score = "0.8",
         high_score_threshold = "0.7",
-        low_score_threshold = "0.1"
+        low_score_threshold = "0.1",
+        measurement_noise = "[1., 1., 10., 10.]",
+        process_noise = "[1., 1., 1., 1., 0.01, 0.01, 0.0001]"
     )]
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         max_age: u32,
         min_hits: u32,
@@ -360,9 +370,17 @@ impl ByteTrack {
         init_tracker_min_score: f32,
         high_score_threshold: f32,
         low_score_threshold: f32,
+        measurement_noise: [f32; 4],
+        process_noise: [f32; 7],
     ) -> Self {
-        let sort_tracker =
-            SORTTracker::new(max_age, min_hits, iou_threshold, init_tracker_min_score);
+        let sort_tracker = SORTTracker::new(
+            max_age,
+            min_hits,
+            iou_threshold,
+            init_tracker_min_score,
+            measurement_noise,
+            process_noise,
+        );
         ByteTrack {
             high_score_threshold,
             low_score_threshold,
@@ -463,7 +481,14 @@ mod tests {
 
     #[test]
     fn test_first_update() {
-        let mut tracker = SORTTracker::new(1, 3, 0.3, 0.3);
+        let mut tracker = SORTTracker::new(
+            1,
+            3,
+            0.3,
+            0.3,
+            [1., 1., 10., 10.],
+            [1., 1., 1., 1., 0.01, 0.01, 0.0001],
+        );
         assert_abs_diff_eq!(
             tracker
                 .update(

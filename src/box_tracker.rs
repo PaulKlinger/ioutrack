@@ -29,15 +29,14 @@ pub struct KalmanBoxTracker {
 pub struct KalmanBoxTrackerParams {
     pub id: u32,
     pub bbox: Bbox<f32>,
-    /// Variance of box center measurement
-    /// default = 1.
-    pub center_var: Option<f32>,
-    /// Variance of box area measurement
-    /// default = 10.
-    pub area_var: Option<f32>,
-    /// Variance of box aspect ratio measurement
-    /// default = 0.01
-    pub aspect_var: Option<f32>,
+    /// Diagonal of the measurement noise covariance matrix
+    /// i.e. uncertainties of (x, y, s, r) measurements
+    /// default = [1., 1., 10., 10.]
+    pub meas_var: Option<[f32; 4]>,
+    /// Diagonal of the process noise covariance matrix
+    /// i.e. uncertainties of (x, y, s, r, dx, dy, ds) during transition
+    /// default = [1., 1., 1., 1. 0.01, 0.01, 0.0001]
+    pub proc_var: Option<[f32; 7]>,
 }
 
 impl KalmanBoxTracker {
@@ -65,21 +64,10 @@ impl KalmanBoxTracker {
                     [0., 0., 1., 0., 0., 0., 0.],
                     [0., 0., 0., 1., 0., 0., 0.]
                 ],
-                r: Array2::from_diag(&array![
-                    p.center_var.unwrap_or(1.),
-                    p.center_var.unwrap_or(1.),
-                    p.area_var.unwrap_or(10.),
-                    p.aspect_var.unwrap_or(10.)
-                ]),
-                q: Array2::from_diag(&array![
-                    p.center_var.unwrap_or(1.),
-                    p.center_var.unwrap_or(1.),
-                    p.area_var.unwrap_or(1.),
-                    p.aspect_var.unwrap_or(1.),
-                    0.01,
-                    0.01,
-                    0.0001
-                ]),
+                r: Array2::from_diag(&arr1(&p.meas_var.unwrap_or([1., 1., 10., 10.]))),
+                q: Array2::from_diag(&arr1(
+                    &p.proc_var.unwrap_or([1., 1., 1., 1., 0.01, 0.01, 0.0001]),
+                )),
             }),
             age: 0,
             hits: 0,
@@ -138,9 +126,8 @@ mod tests {
                 ymin: 0.,
                 ymax: 5.,
             },
-            center_var: None,
-            area_var: None,
-            aspect_var: None,
+            meas_var: None,
+            proc_var: None,
         });
         tracker.predict();
         tracker
