@@ -11,13 +11,18 @@ crate-type = ["cdylib", "lib"]
 [dependencies]
 pyo3 = { version = "0.16.3", features = ["extension-module", "anyhow"] }
 ndarray = {version = "0.15.4", features = ["approx-0_5"]}
-ndarray-linalg = {version = "0.14.1", features = ["intel-mkl-static"]}
 approx = "0.5.1"
 numpy = "0.16.2"
 num = "0.4.0"
 anyhow = "<1.0.49"
 itertools = "0.10.3"
 lapjv = { git = "https://github.com/PaulKlinger/lapjv-rust", rev="12527061a3" }
+
+[target.'cfg(not (target_os = "macos"))'.dependencies]
+ndarray-linalg = {version = "0.14.1", features = ["intel-mkl-static"]}
+
+[target.'cfg(target_os = "macos")'.dependencies]
+ndarray-linalg = {version = "0.14.1", features = ["openblas-static"]}
 
 [dev-dependencies]
 ndarray-npy = "0.8.1"
