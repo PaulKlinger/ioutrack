@@ -85,7 +85,7 @@ impl KalmanBoxTracker {
             self.hit_streak += 1;
         }
         self.steps_since_update = 0;
-        self.kf.update(bbox.to_z())?;
+        self.kf.update(bbox.to_z().into())?;
         Ok(())
     }
 

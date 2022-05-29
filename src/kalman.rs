@@ -117,8 +117,8 @@ impl<T: LinalgScalar + Lapack + Float> KalmanFilter<T> {
     /// Update estimate of the state given the measurement z and return mean
     /// check KalmanFilter.p if you need the state covariance
     /// result shape = (dim_x)
-    pub fn update(&mut self, z: Array1<T>) -> Result<Array1<T>> {
-        let z2 = z.insert_axis(Axis(1));
+    pub fn update(&mut self, z: CowArray<T, Ix1>) -> Result<Array1<T>> {
+        let z2 = z.into_owned().insert_axis(Axis(1));
         self.y = z2 - self.h.dot(&self.x);
         let pht = self.p.dot(&self.h.t());
         self.s = self.h.dot(&pht) + &self.r;
@@ -154,9 +154,9 @@ mod tests {
         });
 
         assert_eq!(kf.predict(), array![0., 0.]); // state mean remains at [0, 0]
-        kf.update(array![2.]).unwrap();
+        kf.update(array![2.].into()).unwrap();
         kf.predict();
-        kf.update(array![3.5]).unwrap();
+        kf.update(array![3.5].into()).unwrap();
 
         assert_abs_diff_eq!(kf.predict(), array![5.290117, 1.742009], epsilon = 0.0001);
     }

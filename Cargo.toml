@@ -31,3 +31,11 @@ criterion = "0.3"
 [[bench]]
 name = "mot"
 harness = false
+
+[[bench]]
+name = "kalman"
+harness = false
+
+[[bench]]
+name = "bbox"
+harness = false
