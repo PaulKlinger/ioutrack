@@ -18,7 +18,7 @@ tracks_0 = tracker.update(boxes_0)
 #                            xmin ymin xmax ymax track_id
 assert tracks_0 == np.array([[10., 60., 50., 95., 1.],...])
 ```
-
-See the [demo](https://github.com/PaulKlinger/ioutrack/tree/main/demo) folder for more usage examples.
+Demo video: [https://youtu.be/BLMnY8K9HBE](https://youtu.be/BLMnY8K9HBE)  
+Code to generate the demo video is in the [demo](https://github.com/PaulKlinger/ioutrack/tree/main/demo) folder.
 
 Roughly 30x faster than [python/numpy implementation](https://github.com/abewley/sort).
