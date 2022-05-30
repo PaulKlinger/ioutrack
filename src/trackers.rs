@@ -74,7 +74,7 @@ fn assign_detections_to_tracks(
 #[pyclass(
     text_signature = "(max_age=1, min_hits=3, iou_threshold=0.3, init_tracker_min_score=0.0, measurement_noise=[1., 1., 10., 0.05], process_noise=[1., 1., 1., 0.001, 0.01, 0.01, 0.0001]))"
 )]
-pub struct SORTTracker {
+pub struct Sort {
     #[pyo3(get, set)]
     pub max_age: u32,
     #[pyo3(get, set)]
@@ -95,7 +95,7 @@ pub struct SORTTracker {
     pub n_steps: u32,
 }
 
-impl SORTTracker {
+impl Sort {
     fn predict(&mut self) -> Array2<f32> {
         let mut data = Vec::with_capacity(self.tracklets.len() * 5);
         for (_, tracklet) in self.tracklets.iter_mut() {
@@ -175,7 +175,7 @@ impl SORTTracker {
 }
 
 #[pymethods]
-impl SORTTracker {
+impl Sort {
     #[new]
     #[args(
         max_age = "1",
@@ -193,7 +193,7 @@ impl SORTTracker {
         measurement_noise: [f32; 4],
         process_noise: [f32; 7],
     ) -> Self {
-        SORTTracker {
+        Sort {
             max_age,
             min_hits,
             iou_threshold,
@@ -304,7 +304,7 @@ pub struct ByteTrack {
     #[pyo3(get, set)]
     pub low_score_threshold: f32,
 
-    sort_tracker: SORTTracker,
+    sort_tracker: Sort,
 }
 
 impl ByteTrack {
@@ -399,7 +399,7 @@ impl ByteTrack {
         measurement_noise: [f32; 4],
         process_noise: [f32; 7],
     ) -> Self {
-        let sort_tracker = SORTTracker::new(
+        let sort_tracker = Sort::new(
             max_age,
             min_hits,
             iou_threshold,
@@ -535,7 +535,7 @@ mod tests {
 
     #[test]
     fn test_first_update() {
-        let mut tracker = SORTTracker::new(
+        let mut tracker = Sort::new(
             1,
             3,
             0.3,

@@ -10,12 +10,12 @@ pub mod trackers;
 
 pub use box_tracker::KalmanBoxTracker;
 pub use trackers::ByteTrack;
-pub use trackers::SORTTracker;
+pub use trackers::Sort;
 
 /// A Python module implemented in Rust.
 #[pymodule]
 fn ioutrack(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_class::<SORTTracker>()?;
+    m.add_class::<Sort>()?;
     m.add_class::<ByteTrack>()?;
     m.add_class::<KalmanBoxTracker>()?;
 

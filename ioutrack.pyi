@@ -2,7 +2,7 @@ import numpy as np
 import numpy.typing as npt
 from typing import Union
 
-class SORTTracker:
+class Sort:
     max_age: int
     min_hits: int
     iou_threshold: float
@@ -26,7 +26,7 @@ class SORTTracker:
             0.01,
             0.0001,
         ),
-    ) -> SORTTracker:
+    ) -> Sort:
         """Create a new SORT bbox tracker
 
         Parameters
@@ -62,7 +62,9 @@ class SORTTracker:
             of the form [[xmin1, ymin1, xmax1, ymax1, track_id1], [xmin2,...],...]
         """
         ...
-    def get_current_track_boxes(return_all: bool = False) -> np.NDArray[np.float32]:
+    def get_current_track_boxes(
+        self, return_all: bool = False
+    ) -> npt.NDArray[np.float32]:
         """Return current track boxes
 
         Parameters
@@ -105,7 +107,7 @@ class ByteTrack:
             0.01,
             0.0001,
         ),
-    ) -> SORTTracker:
+    ) -> ByteTrack:
         """Create a new SORT bbox tracker
 
         Parameters
@@ -152,7 +154,9 @@ class ByteTrack:
             of the form [[xmin1, ymin1, xmax1, ymax1, track_id1], [xmin2,...],...]
         """
         ...
-    def get_current_track_boxes(return_all: bool = False) -> np.NDArray[np.float32]:
+    def get_current_track_boxes(
+        self, return_all: bool = False
+    ) -> npt.NDArray[np.float32]:
         """Return current track boxes
 
         Parameters

@@ -7,9 +7,9 @@ Python package for IOU-based tracking ([SORT](https://arxiv.org/abs/1602.00763) 
 
 
 ```Python
-from ioutrack import SORTTracker
+from ioutrack import Sort
 
-tracker = SORTTracker(max_age=5, min_hits=2)
+tracker = Sort(max_age=5, min_hits=2)
 
 #                   xmin ymin xmax ymax score
 boxes_0 = np.array([[10., 60., 50., 95., 0.8],...])
