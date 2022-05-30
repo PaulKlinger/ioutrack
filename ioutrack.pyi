@@ -2,7 +2,18 @@ import numpy as np
 import numpy.typing as npt
 from typing import Union
 
-class Sort:
+class BaseTracker:
+    def __new__(self) -> BaseTracker: ...
+    def update(
+        self, boxes: npt.NDArray[Union[np.float32, np.float64]], return_all: bool
+    ) -> npt.NDArray[np.float32]: ...
+    def get_current_track_boxes(
+        self, return_all: bool = False
+    ) -> npt.NDArray[np.float32]: ...
+    def clear_trackers(self) -> None: ...
+    def remove_tracker(self, track_id: int) -> None: ...
+
+class Sort(BaseTracker):
     max_age: int
     min_hits: int
     iou_threshold: float
@@ -80,8 +91,15 @@ class Sort:
            of the form [[xmin1, ymin1, xmax1, ymax1, track_id1], [xmin2,...],...]
         """
         ...
+    def clear_trackers(self) -> None:
+        """Remove all tracklets"""
+        ...
+    def remove_tracker(self, track_id: int) -> None:
+        """Remove tracklet with the given track_id,
+        do nothing if it doesn't exist"""
+        ...
 
-class ByteTrack:
+class ByteTrack(BaseTracker):
     max_age: int
     min_hits: int
     iou_threshold: float
@@ -171,6 +189,13 @@ class ByteTrack:
            array of tracklet boxes with shape (n_tracks, 5)
            of the form [[xmin1, ymin1, xmax1, ymax1, track_id1], [xmin2,...],...]
         """
+        ...
+    def clear_trackers(self) -> None:
+        """Remove all tracklets"""
+        ...
+    def remove_tracker(self, track_id: int) -> None:
+        """Remove tracklet with the given track_id,
+        do nothing if it doesn't exist"""
         ...
 
 class Bbox:

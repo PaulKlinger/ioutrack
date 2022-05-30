@@ -11,7 +11,8 @@ fn run_sort_on_dets(dets: &Array2<f32>, frame_borders: &Array1<usize>) {
         0.5,
         [1., 1., 10., 10.],
         [1., 1., 1., 1., 0.01, 0.01, 0.0001],
-    );
+    )
+    .0;
     let mut first_i: usize = 0;
     for &last_i in frame_borders.iter() {
         tracker
@@ -42,7 +43,8 @@ fn run_bytetrack_on_dets(dets: &Array2<f32>, frame_borders: &Array1<usize>) {
         0.1,
         [1., 1., 10., 10.],
         [1., 1., 1., 1., 0.01, 0.01, 0.0001],
-    );
+    )
+    .0;
     let mut first_i: usize = 0;
     for &last_i in frame_borders.iter() {
         tracker

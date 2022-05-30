@@ -1,6 +1,6 @@
 use num::cast;
 use numpy::ndarray::prelude::*;
-use numpy::pyo3::exceptions::PyValueError;
+use numpy::pyo3::exceptions::{PyNotImplementedError, PyValueError};
 use numpy::pyo3::prelude::*;
 use numpy::{IntoPyArray, PyArray2, PyReadonlyArray2};
 use std::collections::BTreeMap;
@@ -59,6 +59,60 @@ fn assign_detections_to_tracks(
     Ok((match_updates, unmatched_dets))
 }
 
+#[pyclass(subclass)]
+pub struct BaseTracker {}
+
+#[pymethods]
+impl BaseTracker {
+    #[new]
+    fn new() -> Self {
+        BaseTracker {}
+    }
+
+    #[args(boxes, return_all = "false")]
+    #[pyo3(name = "update", text_signature = "(boxes, return_all = False)")]
+    fn py_update<'py>(
+        &mut self,
+        _py: Python<'py>,
+        _boxes: &'py PyAny,
+        _return_all: bool,
+    ) -> PyResult<&'py PyArray2<f32>> {
+        Err(PyNotImplementedError::new_err(
+            "Abstract method cannot be called!",
+        ))
+    }
+
+    #[args(return_all = "false")]
+    #[pyo3(
+        name = "get_current_track_boxes",
+        text_signature = "(return_all = False)"
+    )]
+    pub fn get_current_track_boxes<'py>(
+        &self,
+        _py: Python<'py>,
+        _return_all: bool,
+    ) -> PyResult<&'py PyArray2<f32>> {
+        Err(PyNotImplementedError::new_err(
+            "Abstract method cannot be called!",
+        ))
+    }
+
+    #[pyo3(name = "clear_trackers", text_signature = "()")]
+    pub fn clear_trackers(&self) -> PyResult<()> {
+        Err(PyNotImplementedError::new_err(
+            "Abstract method cannot be called!",
+        ))
+    }
+
+    #[args(track_id)]
+    #[pyo3(name = "remove_tracker", text_signature = "(track_id)")]
+    pub fn remove_tracker(&mut self, _track_id: u32) -> PyResult<()> {
+        Err(PyNotImplementedError::new_err(
+            "Abstract method cannot be called!",
+        ))
+    }
+}
+
 /// Create a new SORT bbox tracker
 ///
 /// Parameters
@@ -72,6 +126,7 @@ fn assign_detections_to_tracks(
 /// init_tracker_min_score
 ///     minimum score to create a new tracklet from unmatched detection box
 #[pyclass(
+    extends=BaseTracker,
     text_signature = "(max_age=1, min_hits=3, iou_threshold=0.3, init_tracker_min_score=0.0, measurement_noise=[1., 1., 10., 0.05], process_noise=[1., 1., 1., 0.001, 0.01, 0.01, 0.0001]))"
 )]
 pub struct Sort {
@@ -192,18 +247,21 @@ impl Sort {
         init_tracker_min_score: f32,
         measurement_noise: [f32; 4],
         process_noise: [f32; 7],
-    ) -> Self {
-        Sort {
-            max_age,
-            min_hits,
-            iou_threshold,
-            init_tracker_min_score,
-            measurement_noise,
-            process_noise,
-            next_track_id: 1,
-            tracklets: BTreeMap::new(),
-            n_steps: 0,
-        }
+    ) -> (Self, BaseTracker) {
+        (
+            Sort {
+                max_age,
+                min_hits,
+                iou_threshold,
+                init_tracker_min_score,
+                measurement_noise,
+                process_noise,
+                next_track_id: 1,
+                tracklets: BTreeMap::new(),
+                n_steps: 0,
+            },
+            BaseTracker::new(),
+        )
     }
 
     /// Update the tracker with new boxes and return position of current tracklets
@@ -276,6 +334,19 @@ impl Sort {
     ) -> &'py PyArray2<f32> {
         self.get_tracklet_boxes(return_all).into_pyarray(_py)
     }
+
+    /// Remove all current tracklets
+    #[pyo3(text_signature = "()")]
+    pub fn clear_trackers(&mut self) {
+        self.tracklets.clear();
+    }
+
+    /// Remove the tracklet with the given track_id
+    /// no effect if the track_id is not in use
+    #[pyo3(text_signature = "(track_id)")]
+    pub fn remove_tracker(&mut self, track_id: u32) {
+        self.tracklets.remove(&track_id);
+    }
 }
 
 /// Create a new ByteTrack bbox tracker
@@ -296,6 +367,7 @@ impl Sort {
 ///     boxes with score between low_score_threshold and high_score_threshold
 ///     will be used in the second round of association
 #[pyclass(
+    extends=BaseTracker,
     text_signature = "(max_age=1, min_hits=3, iou_threshold=0.3, init_tracker_min_score=0.8, high_score_threshold=0.7, low_score_threshold=0.1, measurement_noise=[1., 1., 10., 10.], process_noise=[1., 1., 1., 1., 0.01, 0.01, 0.0001])"
 )]
 pub struct ByteTrack {
@@ -398,7 +470,7 @@ impl ByteTrack {
         low_score_threshold: f32,
         measurement_noise: [f32; 4],
         process_noise: [f32; 7],
-    ) -> Self {
+    ) -> (Self, BaseTracker) {
         let sort_tracker = Sort::new(
             max_age,
             min_hits,
@@ -406,12 +478,16 @@ impl ByteTrack {
             init_tracker_min_score,
             measurement_noise,
             process_noise,
-        );
-        ByteTrack {
-            high_score_threshold,
-            low_score_threshold,
-            sort_tracker,
-        }
+        )
+        .0;
+        (
+            ByteTrack {
+                high_score_threshold,
+                low_score_threshold,
+                sort_tracker,
+            },
+            BaseTracker::new(),
+        )
     }
 
     /// Update the tracker with new boxes and return position of current tracklets
@@ -487,6 +563,19 @@ impl ByteTrack {
             .into_pyarray(_py)
     }
 
+    /// Remove all current tracklets
+    #[pyo3(name = "clear_trackers", text_signature = "()")]
+    pub fn clear_trackers(&mut self) {
+        self.sort_tracker.clear_trackers();
+    }
+
+    /// Remove the tracklet with the given track_id
+    /// no effect if the track_id is not in use
+    #[pyo3(name = "remove_tracker", text_signature = "(track_id)")]
+    pub fn remove_tracker(&mut self, track_id: u32) {
+        self.sort_tracker.remove_tracker(track_id);
+    }
+
     #[getter]
     fn get_max_age(&self) -> u32 {
         self.sort_tracker.max_age
@@ -542,7 +631,8 @@ mod tests {
             0.3,
             [1., 1., 10., 10.],
             [1., 1., 1., 1., 0.01, 0.01, 0.0001],
-        );
+        )
+        .0;
         assert_abs_diff_eq!(
             tracker
                 .update(
