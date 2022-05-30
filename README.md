@@ -1,6 +1,6 @@
 # IOU Track
 
-[![Actions Status](https://github.com/PaulKlinger/ioutrack/workflows/CI/badge.svg)](https://github.com/PyO3/maturin/actions)
+[![Actions Status](https://github.com/PaulKlinger/ioutrack/workflows/CI/badge.svg)](https://github.com/PaulKlinger/ioutrack/actions)
 [![PyPI](https://img.shields.io/pypi/v/ioutrack.svg?style=flat-square)](https://pypi.org/project/ioutrack/)
 
 Python package for IOU-based tracking ([SORT](https://arxiv.org/abs/1602.00763) & [ByteTrack](https://arxiv.org/abs/2110.06864)) written in Rust.
