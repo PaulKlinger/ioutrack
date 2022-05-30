@@ -250,6 +250,32 @@ impl SORTTracker {
 
         return Ok(self.update(detection_boxes, return_all)?.into_pyarray(_py));
     }
+
+    /// Return current track boxes
+    ///
+    /// Parameters
+    /// ----------
+    /// return_all
+    ///     if true return all living trackers, including inactive (but not dead) ones
+    ///     otherwise return only active trackers (those that got at least min_hits
+    ///     matching boxes in a row)
+    ///
+    /// Returns
+    /// -------
+    ///    array of tracklet boxes with shape (n_tracks, 5)
+    ///    of the form [[xmin1, ymin1, xmax1, ymax1, track_id1], [xmin2,...],...]
+    #[args(return_all = "false")]
+    #[pyo3(
+        name = "get_current_track_boxes",
+        text_signature = "(return_all = False)"
+    )]
+    pub fn get_current_track_boxes<'py>(
+        &self,
+        _py: Python<'py>,
+        return_all: bool,
+    ) -> &'py PyArray2<f32> {
+        self.get_tracklet_boxes(return_all).into_pyarray(_py)
+    }
 }
 
 /// Create a new ByteTrack bbox tracker
@@ -431,6 +457,34 @@ impl ByteTrack {
         }
 
         return Ok(self.update(detection_boxes, return_all)?.into_pyarray(_py));
+    }
+
+    /// Return current track boxes
+    ///
+    /// Parameters
+    /// ----------
+    /// return_all
+    ///     if true return all living trackers, including inactive (but not dead) ones
+    ///     otherwise return only active trackers (those that got at least min_hits
+    ///     matching boxes in a row)
+    ///
+    /// Returns
+    /// -------
+    ///    array of tracklet boxes with shape (n_tracks, 5)
+    ///    of the form [[xmin1, ymin1, xmax1, ymax1, track_id1], [xmin2,...],...]
+    #[args(return_all = "false")]
+    #[pyo3(
+        name = "get_current_track_boxes",
+        text_signature = "(return_all = False)"
+    )]
+    pub fn get_current_track_boxes<'py>(
+        &self,
+        _py: Python<'py>,
+        return_all: bool,
+    ) -> &'py PyArray2<f32> {
+        self.sort_tracker
+            .get_tracklet_boxes(return_all)
+            .into_pyarray(_py)
     }
 
     #[getter]

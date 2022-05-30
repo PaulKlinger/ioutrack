@@ -62,6 +62,22 @@ class SORTTracker:
             of the form [[xmin1, ymin1, xmax1, ymax1, track_id1], [xmin2,...],...]
         """
         ...
+    def get_current_track_boxes(return_all: bool = False) -> np.NDArray[np.float32]:
+        """Return current track boxes
+
+        Parameters
+        ----------
+        return_all
+            if true return all living trackers, including inactive (but not dead) ones
+            otherwise return only active trackers (those that got at least min_hits
+            matching boxes in a row)
+
+        Returns
+        -------
+           array of tracklet boxes with shape (n_tracks, 5)
+           of the form [[xmin1, ymin1, xmax1, ymax1, track_id1], [xmin2,...],...]
+        """
+        ...
 
 class ByteTrack:
     max_age: int
@@ -134,6 +150,22 @@ class ByteTrack:
         -------
             array of tracklet boxes with shape (n_tracks, 5)
             of the form [[xmin1, ymin1, xmax1, ymax1, track_id1], [xmin2,...],...]
+        """
+        ...
+    def get_current_track_boxes(return_all: bool = False) -> np.NDArray[np.float32]:
+        """Return current track boxes
+
+        Parameters
+        ----------
+        return_all
+            if true return all living trackers, including inactive (but not dead) ones
+            otherwise return only active trackers (those that got at least min_hits
+            matching boxes in a row)
+
+        Returns
+        -------
+           array of tracklet boxes with shape (n_tracks, 5)
+           of the form [[xmin1, ymin1, xmax1, ymax1, track_id1], [xmin2,...],...]
         """
         ...
 
