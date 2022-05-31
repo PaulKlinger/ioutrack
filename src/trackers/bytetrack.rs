@@ -25,6 +25,14 @@ use crate::trackers::Sort;
 /// low_score_threshold
 ///     boxes with score between low_score_threshold and high_score_threshold
 ///     will be used in the second round of association
+/// measurement_noise
+///     Diagonal of the measurement noise covariance matrix
+///     i.e. uncertainties of (x, y, s, r) measurements
+///     defaults should be reasonable in most cases
+/// process_noise
+///     Diagonal of the process noise covariance matrix
+///     i.e. uncertainties of (x, y, s, r, dx, dy, ds) during each step
+///     defaults should be reasonable in most cases
 #[pyclass(
     extends=BaseTracker,
     text_signature = "(max_age=1, min_hits=3, iou_threshold=0.3, init_tracker_min_score=0.8, high_score_threshold=0.7, low_score_threshold=0.1, measurement_noise=[1., 1., 10., 10.], process_noise=[1., 1., 1., 1., 0.01, 0.01, 0.0001])"

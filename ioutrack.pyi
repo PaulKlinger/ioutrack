@@ -18,7 +18,7 @@ class Sort(BaseTracker):
     min_hits: int
     iou_threshold: float
     init_tracker_min_score: float
-    tracklets: list[KalmanBoxTracker]
+    tracklets: dict[int, KalmanBoxTracker]
     n_steps: int
 
     def __new__(
@@ -28,7 +28,7 @@ class Sort(BaseTracker):
         iou_threshold: float = 0.3,
         init_tracker_min_score: float = 0.0,
         measurement_noise: tuple[float, float, float, float] = (1.0, 1.0, 10.0, 0.05),
-        process_noiselist: tuple[float, float, float, float, float, float, float] = (
+        process_noise: tuple[float, float, float, float, float, float, float] = (
             1.0,
             1.0,
             1.0,
@@ -50,6 +50,14 @@ class Sort(BaseTracker):
             minimum IOU to assign detection to tracklet
         init_tracker_min_score
             minimum score to create a new tracklet from unmatched detection box
+        measurement_noise
+            Diagonal of the measurement noise covariance matrix
+            i.e. uncertainties of (x, y, s, r) measurements
+            defaults should be reasonable in most cases
+         process_noise
+            Diagonal of the process noise covariance matrix
+            i.e. uncertainties of (x, y, s, r, dx, dy, ds) during each step
+            defaults should be reasonable in most cases
         """
         ...
     def update(
@@ -104,7 +112,7 @@ class ByteTrack(BaseTracker):
     min_hits: int
     iou_threshold: float
     init_tracker_min_score: float
-    tracklets: list[KalmanBoxTracker]
+    tracklets: dict[int, KalmanBoxTracker]
     n_steps: int
 
     def __new__(
@@ -116,7 +124,7 @@ class ByteTrack(BaseTracker):
         high_score_threshold: float = 0.7,
         low_score_threshold: float = 0.1,
         measurement_noise: tuple[float, float, float, float] = (1.0, 1.0, 10.0, 0.05),
-        process_noiselist: tuple[float, float, float, float, float, float, float] = (
+        process_noise: tuple[float, float, float, float, float, float, float] = (
             1.0,
             1.0,
             1.0,
@@ -143,12 +151,14 @@ class ByteTrack(BaseTracker):
         low_score_threshold
             boxes with score between low_score_threshold and high_score_threshold
             will be used in the second round of association
-        measurement_variance
-            diagonal of the measurement noise covariance matrix
-            i.e. measurement uncertainty of bbox (x, y, area, aspect_ratio)
-        process_variance
-            diagonal of the process noise covariance matrix
-            i.e. uncertainty in the step transition of (x, y, area, aspect_ratio, x_vel, y_vel, area_vel)
+        measurement_noise
+            Diagonal of the measurement noise covariance matrix
+            i.e. uncertainties of (x, y, s, r) measurements
+            defaults should be reasonable in most cases
+        process_noise
+            Diagonal of the process noise covariance matrix
+            i.e. uncertainties of (x, y, s, r, dx, dy, ds) during each step
+            defaults should be reasonable in most cases
         """
         ...
     def update(

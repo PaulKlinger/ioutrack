@@ -75,6 +75,14 @@ fn assign_detections_to_tracks(
 ///     minimum IOU to assign detection to tracklet
 /// init_tracker_min_score
 ///     minimum score to create a new tracklet from unmatched detection box
+/// measurement_noise
+///     Diagonal of the measurement noise covariance matrix
+///     i.e. uncertainties of (x, y, s, r) measurements
+///     defaults should be reasonable in most cases
+/// process_noise
+///     Diagonal of the process noise covariance matrix
+///     i.e. uncertainties of (x, y, s, r, dx, dy, ds) during each step
+///     defaults should be reasonable in most cases
 #[pyclass(
     extends=BaseTracker,
     text_signature = "(max_age=1, min_hits=3, iou_threshold=0.3, init_tracker_min_score=0.0, measurement_noise=[1., 1., 10., 0.05], process_noise=[1., 1., 1., 0.001, 0.01, 0.01, 0.0001]))"
