@@ -110,12 +110,22 @@ pub struct Sort {
 
 impl Sort {
     pub fn predict(&mut self) -> Array2<f32> {
+        // estimate of capacity assumes that all trackers are valid
+        // this should be the case most of the time
         let mut data = Vec::with_capacity(self.tracklets.len() * 5);
-        for (_, tracklet) in self.tracklets.iter_mut() {
+
+        // get predicted boxes,
+        // filter out trackers that return invalid boxes
+        self.tracklets.retain(|_, tracklet| {
             let b = tracklet.predict();
-            data.extend(b.to_bounds());
+            let bounds = b.to_bounds();
+            if b.xmin >= b.xmax || b.ymin >= b.ymax || bounds.iter().any(|x| !x.is_normal()) {
+                return false;
+            }
+            data.extend(bounds);
             data.push(cast(tracklet.id).unwrap());
-        }
+            true
+        });
         Array2::from_shape_vec((self.tracklets.len(), 5), data).unwrap()
     }
 
@@ -333,5 +343,30 @@ mod tests {
             array![[0.0, 1.5, 12.6, 25.0, 1.0]],
             epsilon = 0.00001
         )
+    }
+
+    #[test]
+    fn test_filter() {
+        let mut tracker = Sort::new(
+            1,
+            3,
+            0.3,
+            0.3,
+            [1., 1., 10., 10.],
+            [1., 1., 1., 1., 0.01, 0.01, 0.0001],
+        )
+        .0;
+        tracker
+            .update(
+                array![
+                    [f32::INFINITY, 1.5, 12.6, 25.0, 0.9],
+                    [-5.5, 18.0, 1.0, 20.0, 0.15]
+                ]
+                .into(),
+                false,
+            )
+            .unwrap();
+        let res = tracker.predict();
+        assert!(res.shape()[0] == 0);
     }
 }
