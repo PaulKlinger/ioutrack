@@ -23,7 +23,7 @@ jobs:
     - uses: messense/maturin-action@v1
       with:
         command: build
-        args: --release --no-sdist -o dist --target x86_64-apple-darwin
+        args: --release --no-sdist -o dist --universal2
     - name: Upload wheels
       uses: actions/upload-artifact@v2
       with:
