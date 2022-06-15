@@ -2,12 +2,23 @@ import numpy as np
 import numpy.typing as npt
 from typing import Union
 
-class SORTTracker:
+class BaseTracker:
+    def __new__(self) -> BaseTracker: ...
+    def update(
+        self, boxes: npt.NDArray[Union[np.float32, np.float64]], return_all: bool
+    ) -> npt.NDArray[np.float32]: ...
+    def get_current_track_boxes(
+        self, return_all: bool = False
+    ) -> npt.NDArray[np.float32]: ...
+    def clear_trackers(self) -> None: ...
+    def remove_tracker(self, track_id: int) -> None: ...
+
+class Sort(BaseTracker):
     max_age: int
     min_hits: int
     iou_threshold: float
     init_tracker_min_score: float
-    tracklets: list[KalmanBoxTracker]
+    tracklets: dict[int, KalmanBoxTracker]
     n_steps: int
 
     def __new__(
@@ -17,7 +28,7 @@ class SORTTracker:
         iou_threshold: float = 0.3,
         init_tracker_min_score: float = 0.0,
         measurement_noise: tuple[float, float, float, float] = (1.0, 1.0, 10.0, 0.05),
-        process_noiselist: tuple[float, float, float, float, float, float, float] = (
+        process_noise: tuple[float, float, float, float, float, float, float] = (
             1.0,
             1.0,
             1.0,
@@ -26,7 +37,7 @@ class SORTTracker:
             0.01,
             0.0001,
         ),
-    ) -> SORTTracker:
+    ) -> Sort:
         """Create a new SORT bbox tracker
 
         Parameters
@@ -39,6 +50,14 @@ class SORTTracker:
             minimum IOU to assign detection to tracklet
         init_tracker_min_score
             minimum score to create a new tracklet from unmatched detection box
+        measurement_noise
+            Diagonal of the measurement noise covariance matrix
+            i.e. uncertainties of (x, y, s, r) measurements
+            defaults should be reasonable in most cases
+         process_noise
+            Diagonal of the process noise covariance matrix
+            i.e. uncertainties of (x, y, s, r, dx, dy, ds) during each step
+            defaults should be reasonable in most cases
         """
         ...
     def update(
@@ -62,13 +81,38 @@ class SORTTracker:
             of the form [[xmin1, ymin1, xmax1, ymax1, track_id1], [xmin2,...],...]
         """
         ...
+    def get_current_track_boxes(
+        self, return_all: bool = False
+    ) -> npt.NDArray[np.float32]:
+        """Return current track boxes
 
-class ByteTrack:
+        Parameters
+        ----------
+        return_all
+            if true return all living trackers, including inactive (but not dead) ones
+            otherwise return only active trackers (those that got at least min_hits
+            matching boxes in a row)
+
+        Returns
+        -------
+           array of tracklet boxes with shape (n_tracks, 5)
+           of the form [[xmin1, ymin1, xmax1, ymax1, track_id1], [xmin2,...],...]
+        """
+        ...
+    def clear_trackers(self) -> None:
+        """Remove all tracklets"""
+        ...
+    def remove_tracker(self, track_id: int) -> None:
+        """Remove tracklet with the given track_id,
+        do nothing if it doesn't exist"""
+        ...
+
+class ByteTrack(BaseTracker):
     max_age: int
     min_hits: int
     iou_threshold: float
     init_tracker_min_score: float
-    tracklets: list[KalmanBoxTracker]
+    tracklets: dict[int, KalmanBoxTracker]
     n_steps: int
 
     def __new__(
@@ -80,7 +124,7 @@ class ByteTrack:
         high_score_threshold: float = 0.7,
         low_score_threshold: float = 0.1,
         measurement_noise: tuple[float, float, float, float] = (1.0, 1.0, 10.0, 0.05),
-        process_noiselist: tuple[float, float, float, float, float, float, float] = (
+        process_noise: tuple[float, float, float, float, float, float, float] = (
             1.0,
             1.0,
             1.0,
@@ -89,7 +133,7 @@ class ByteTrack:
             0.01,
             0.0001,
         ),
-    ) -> SORTTracker:
+    ) -> ByteTrack:
         """Create a new SORT bbox tracker
 
         Parameters
@@ -107,12 +151,14 @@ class ByteTrack:
         low_score_threshold
             boxes with score between low_score_threshold and high_score_threshold
             will be used in the second round of association
-        measurement_variance
-            diagonal of the measurement noise covariance matrix
-            i.e. measurement uncertainty of bbox (x, y, area, aspect_ratio)
-        process_variance
-            diagonal of the process noise covariance matrix
-            i.e. uncertainty in the step transition of (x, y, area, aspect_ratio, x_vel, y_vel, area_vel)
+        measurement_noise
+            Diagonal of the measurement noise covariance matrix
+            i.e. uncertainties of (x, y, s, r) measurements
+            defaults should be reasonable in most cases
+        process_noise
+            Diagonal of the process noise covariance matrix
+            i.e. uncertainties of (x, y, s, r, dx, dy, ds) during each step
+            defaults should be reasonable in most cases
         """
         ...
     def update(
@@ -135,6 +181,31 @@ class ByteTrack:
             array of tracklet boxes with shape (n_tracks, 5)
             of the form [[xmin1, ymin1, xmax1, ymax1, track_id1], [xmin2,...],...]
         """
+        ...
+    def get_current_track_boxes(
+        self, return_all: bool = False
+    ) -> npt.NDArray[np.float32]:
+        """Return current track boxes
+
+        Parameters
+        ----------
+        return_all
+            if true return all living trackers, including inactive (but not dead) ones
+            otherwise return only active trackers (those that got at least min_hits
+            matching boxes in a row)
+
+        Returns
+        -------
+           array of tracklet boxes with shape (n_tracks, 5)
+           of the form [[xmin1, ymin1, xmax1, ymax1, track_id1], [xmin2,...],...]
+        """
+        ...
+    def clear_trackers(self) -> None:
+        """Remove all tracklets"""
+        ...
+    def remove_tracker(self, track_id: int) -> None:
+        """Remove tracklet with the given track_id,
+        do nothing if it doesn't exist"""
         ...
 
 class Bbox:

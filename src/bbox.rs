@@ -17,7 +17,7 @@ pub struct Bbox<T: BboxNum> {
 impl<T: BboxNum> Bbox<T> {
     /// Convert Bbox to center_x, center_y, area, aspect_ratio representation
     /// (measurement for Kalman filter)
-    pub fn to_z(self) -> Array1<f32> {
+    pub fn to_z(&self) -> Array1<f32> {
         let width = (self.xmax - self.xmin).to_f32().unwrap();
         let height = (self.ymax - self.ymin).to_f32().unwrap();
         array![
@@ -28,7 +28,7 @@ impl<T: BboxNum> Bbox<T> {
         ]
     }
 
-    pub fn to_bounds(self) -> [T; 4] {
+    pub fn to_bounds(&self) -> [T; 4] {
         [self.xmin, self.ymin, self.xmax, self.ymax]
     }
 }
