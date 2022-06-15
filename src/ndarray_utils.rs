@@ -74,6 +74,7 @@ pub fn invert_ndmatrix<T: RealField + Scalar>(a: ArrayView2<T>) -> Result<Array2
 #[cfg(test)]
 mod tests {
     use super::*;
+    use approx::assert_abs_diff_eq;
 
     #[test]
     fn test_get_broadcast_shape_successful() {
@@ -109,5 +110,12 @@ mod tests {
             .into_dimensionality()
             .unwrap();
         assert_eq!(max, array![[1, 3, 1], [-1, -1, -1]]);
+    }
+
+    #[test]
+    fn test_invert() {
+        let a: Array2<f64> = array![[2., 6.], [1., 4.]];
+        let ainv = invert_ndmatrix(a.view()).unwrap();
+        assert_abs_diff_eq!(ainv, array![[2., -3.], [-0.5, 1.]], epsilon = 0.0001)
     }
 }

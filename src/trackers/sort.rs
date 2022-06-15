@@ -109,7 +109,7 @@ pub struct Sort {
 }
 
 impl Sort {
-    pub fn predict(&mut self) -> Array2<f32> {
+    pub fn predict_and_cleanup(&mut self) -> Array2<f32> {
         // estimate of capacity assumes that all trackers are valid
         // this should be the case most of the time
         let mut data = Vec::with_capacity(self.tracklets.len() * 5);
@@ -184,7 +184,7 @@ impl Sort {
         detection_boxes: CowArray<f32, Ix2>,
         return_all: bool,
     ) -> anyhow::Result<Array2<f32>> {
-        let tracklet_boxes = self.predict();
+        let tracklet_boxes = self.predict_and_cleanup();
         let unmatched_detections =
             self.update_tracklets(detection_boxes.view(), tracklet_boxes.view())?;
 
@@ -366,7 +366,7 @@ mod tests {
                 false,
             )
             .unwrap();
-        let res = tracker.predict();
+        let res = tracker.predict_and_cleanup();
         assert!(res.shape()[0] == 0);
     }
 }

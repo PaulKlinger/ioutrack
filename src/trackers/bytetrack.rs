@@ -73,7 +73,7 @@ impl ByteTrack {
         detection_boxes: CowArray<f32, Ix2>,
         return_all: bool,
     ) -> anyhow::Result<Array2<f32>> {
-        let tracklet_boxes = self.sort_tracker.predict();
+        let tracklet_boxes = self.sort_tracker.predict_and_cleanup();
 
         let (high_score_detections, low_score_detections) = self.split_detections(detection_boxes);
 
