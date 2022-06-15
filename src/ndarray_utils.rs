@@ -1,8 +1,13 @@
 use crate::num_utils::{partial_max, partial_min, BboxNum};
+use anyhow::Result;
 use itertools::EitherOrBoth::{Both, Left, Right};
 use itertools::Itertools;
+use nalgebra::{try_invert_to, DMatrix};
+use nalgebra::{RealField, Scalar};
 use ndarray::prelude::*;
 use ndarray::Zip;
+use nshare::ToNalgebra;
+use nshare::ToNdarray2;
 
 /// Get the output shape when broadcasting a & b against each other
 /// (Can give output that's bigger than a or b in each axis, vs std rust ndarray broadcasting
@@ -52,6 +57,18 @@ pub fn minimum<T: BboxNum, D1: Dimension, D2: Dimension>(
         .and_broadcast(&b)
         .for_each(|r, &x, &y| *r = partial_min(x, y));
     Ok(res)
+}
+
+/// Invert the given square matrix if possible
+pub fn invert_ndmatrix<T: RealField + Scalar>(a: ArrayView2<T>) -> Result<Array2<T>> {
+    let nalg_array = a.into_nalgebra().into_owned();
+    let (rows, cols) = a.dim();
+    let mut out = DMatrix::from_element(rows, cols, T::zero());
+    let res = try_invert_to(nalg_array, &mut out);
+    match res {
+        true => Ok(out.into_ndarray2()),
+        false => Err(anyhow::anyhow!("Error inverting matrix!")),
+    }
 }
 
 #[cfg(test)]

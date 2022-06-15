@@ -1,12 +1,12 @@
+use crate::ndarray_utils::invert_ndmatrix;
 use anyhow::{Context, Result};
+use nalgebra::RealField;
 use ndarray::prelude::*;
 use ndarray::LinalgScalar;
-use ndarray_linalg::solve::Inverse;
-use ndarray_linalg::types::Lapack;
 use num::Float;
 
 /// Parameters to initialise a KalmanFilter
-pub struct KalmanFilterParams<T: LinalgScalar + Lapack + Float> {
+pub struct KalmanFilterParams<T: LinalgScalar + RealField + Float> {
     /// dimension of state vector
     pub dim_x: usize,
     /// dimension of measurement vectors
@@ -41,7 +41,7 @@ pub struct KalmanFilterParams<T: LinalgScalar + Lapack + Float> {
 /// Linear Kalman filter
 /// use KalmanFilter::new to initialise
 #[derive(Debug, Clone)]
-pub struct KalmanFilter<T: LinalgScalar + Lapack + Float> {
+pub struct KalmanFilter<T: LinalgScalar + RealField + Float> {
     pub x: Array2<T>,
     pub p: Array2<T>,
     f: Array2<T>,
@@ -55,7 +55,7 @@ pub struct KalmanFilter<T: LinalgScalar + Lapack + Float> {
     _i: Array2<T>,
 }
 
-impl<T: LinalgScalar + Lapack + Float> KalmanFilter<T> {
+impl<T: LinalgScalar + RealField + Float> KalmanFilter<T> {
     /// Initialise Kalman filter with the given parameters
     pub fn new(params: KalmanFilterParams<T>) -> Self {
         debug_assert_eq!(
@@ -122,7 +122,7 @@ impl<T: LinalgScalar + Lapack + Float> KalmanFilter<T> {
         self.y = z2 - self.h.dot(&self.x);
         let pht = self.p.dot(&self.h.t());
         self.s = self.h.dot(&pht) + &self.r;
-        self.si = self.s.inv().context("Error inverting S matrix!")?;
+        self.si = invert_ndmatrix(self.s.view()).context("Error inverting S matrix!")?;
 
         self.k = pht.dot(&self.si);
         self.x += &self.k.dot(&self.y);
