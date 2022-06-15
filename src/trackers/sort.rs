@@ -169,7 +169,11 @@ impl Sort {
             assign_detections_to_tracks(detection_boxes, tracklet_boxes, self.iou_threshold)?;
 
         for (track_id, bbox) in matched_boxes {
-            self.tracklets.get_mut(&track_id).unwrap().update(bbox)?;
+            let update_result = self.tracklets.get_mut(&track_id).unwrap().update(bbox);
+            if update_result.is_err() {
+                // Failed to invert S matrix, broken tracklet
+                self.tracklets.remove(&track_id);
+            }
         }
         Ok(unmatched_detections)
     }
